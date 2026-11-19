@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MecSPICE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Share+Tech+Mono&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <circle cx="11" cy="11" r="9.5" stroke="#ff9f1c" stroke-width="1.4" stroke-dasharray="3 2"/>
+      <path d="M3 11h4l2-5 3 10 2-5h5" stroke="#4fb3ff" stroke-width="1.6" fill="none"/>
+    </svg>
+    MEC<span>SPICE</span>
+  </div>
+  <div id="doc-title" contenteditable="true" spellcheck="false" title="Título do esquemático (clique para editar)">Sem título</div>
+
+  <div class="tb-group">
+    <button class="btn" id="btn-new" title="Novo esquemático">Novo</button>
+    <button class="btn" id="btn-open" title="Abrir (Ctrl+O)">Abrir</button>
+    <button class="btn" id="btn-save" title="Salvar (Ctrl+S)">Salvar</button>
+    <button class="btn accent" id="btn-ex">Exemplos</button>
+    <input type="file" id="file" accept=".json,application/json" hidden>
+  </div>
+  <div class="tb-group">
+    <button class="btn icon" id="btn-undo" title="Desfazer (Ctrl+Z)">↶</button>
+    <button class="btn icon" id="btn-redo" title="Refazer (Ctrl+Y)">↷</button>
+    <button class="btn icon on" data-mode="select" title="Selecionar (Esc)">⬚</button>
+    <button class="btn icon" data-mode="wire" title="Fio (W)">╱</button>
+    <button class="btn icon" data-mode="probe" title="Ponta de prova (P)">⌖</button>
+    <button class="btn icon" id="btn-rot" title="Girar (R)">⟳</button>
+    <button class="btn icon" id="btn-del" title="Excluir (Del)">✕</button>
+    <button class="btn icon" id="btn-fit" title="Enquadrar (F)">⤢</button>
+  </div>
+  <div class="tb-group sim">
+    <label>t<sub>stop</sub> <input id="tstop" value="1" size="5"></label>
+    <label>passo <input id="dt" value="1m" size="5"></label>
+    <select id="method" title="Método de integração">
+      <option value="trap">Trapezoidal</option>
+      <option value="be">Euler implícito</option>
+    </select>
+    <button class="btn run" id="run" title="Simular (Ctrl+Enter / F9)">▶ Simular</button>
+    <span id="sim-status" class="pill">sem resultado</span>
+  </div>
+  <div class="tb-group right">
+    <button class="btn" id="btn-net" title="Ver netlist">Netlist</button>
+    <button class="btn" id="btn-3d" title="Mostrar/ocultar vista 3D">3D</button>
+    <button class="btn icon" id="btn-help" title="Ajuda">?</button>
+  </div>
+  <div id="progress-wrap"><div id="progress"></div></div>
+</header>
+
+<main id="app">
+  <aside id="palette">
+    <input id="pal-search" placeholder="Buscar componente…" spellcheck="false">
+    <div id="palette-list"></div>
+  </aside>
+
+  <section id="work">
+    <div id="work-top">
+      <div id="sch-wrap">
+        <canvas id="sch" tabindex="0"></canvas>
+        <div id="hint"></div>
+        <label class="sch-opt"><input type="checkbox" id="toggle-names" checked> nomes dos nós</label>
+      </div>
+      <div id="split-v" class="splitter v"></div>
+      <div id="v3d-pane">
+        <div class="pane-head">
+          <span class="pane-title">Bancada 3D</span>
+          <button class="btn icon sm" id="rew" title="Início">⏮</button>
+          <button class="btn icon sm" id="play" title="Play/Pausa (Espaço)">▶</button>
+          <select id="speed" title="Velocidade de reprodução (tempo simulado por segundo real)">
+            <option value="0.001">0,001×</option>
+            <option value="0.01">0,01×</option>
+            <option value="0.05">0,05×</option>
+            <option value="0.1" selected>0,1×</option>
+            <option value="0.25">0,25×</option>
+            <option value="0.5">0,5×</option>
+            <option value="1">1×</option>
+            <option value="2">2×</option>
+          </select>
+          <input type="range" id="tslider" min="0" max="1000" value="0">
+          <span id="tlabel">t = 0 s</span>
+        </div>
+        <div id="v3d"></div>
+        <div class="v3d-foot">
+          <label title="Ampliação visual dos deslocamentos lineares">escala x <input id="dscale" value="10" size="3"></label>
+          <button class="btn sm" id="btn-fit3d">Enquadrar</button>
+          <span class="muted">arraste: orbitar · shift/dir.: mover · roda: zoom</span>
+        </div>
+      </div>
+    </div>
+    <div id="split-h" class="splitter h"></div>
+    <div id="plot-pane">
+      <div class="pane-head">
+        <span class="pane-title">Formas de onda</span>
+        <select id="units" title="Unidades rotacionais">
+          <option value="si">SI (rad, rad/s)</option>
+          <option value="prat">Prático (°, RPM)</option>
+        </select>
+        <button class="btn sm" id="btn-clear">Limpar traços</button>
+        <button class="btn sm" id="btn-csv">Exportar CSV</button>
+        <span class="muted">arraste = zoom · duplo-clique = restaurar · clique na legenda = remover</span>
+      </div>
+      <div id="plot-wrap"><canvas id="plot"></canvas></div>
+    </div>
+  </section>
+
+  <aside id="side">
+    <div class="side-sec">
+      <div class="sec-title">Propriedades</div>
+      <div id="props"></div>
+    </div>
+    <div class="side-sec grow">
+      <div class="sec-title">Sinais</div>
+      <input id="sig-search" placeholder="Filtrar sinais…" spellcheck="false">
+      <div id="signals"><div class="muted">Simule para listar os sinais.</div></div>
+    </div>
+    <div class="side-sec">
+      <div class="sec-title">Mensagens</div>
+      <div id="log"></div>
+    </div>
+  </aside>
+</main>
+
+<div id="ctxmenu"></div>
+<div id="modal">
+  <div class="modal-box">
+    <div class="modal-head"><span id="modal-title"></span><button class="btn icon" onclick="app.closeModal()">✕</button></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/solver.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/plot.js"></script>
+<script src="js/view3d.js"></script>
+<script src="js/examples.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
