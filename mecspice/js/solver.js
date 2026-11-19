@@ -159,6 +159,7 @@ MS.buildCircuit = function (doc, nl) {
     const pos = (k, v) => { if (!(v > 0)) errors.push(`${c.name}: "${k}" deve ser > 0`); return v; };
     const Q = (k, lab, u, f) => quants.push({ comp: c, k, label: `${lab}(${c.name})`, u, f });
     const dI = MS.DOM;
+    const nEl0 = els.length;
     switch (c.type) {
       case 'R': { const e = { t: 'G', a: n(0), b: n(1), g: 1 / pos('R', P('R')) }; els.push(e); Q('I', 'I', 'A', X => e.g * (X(e.a) - X(e.b))); break; }
       case 'BR': { const e = { t: 'G', a: n(0), b: n(1), g: P('b') }; els.push(e); Q('tau', 'τ', 'N·m', X => e.g * (X(e.a) - X(e.b))); break; }
@@ -235,6 +236,7 @@ MS.buildCircuit = function (doc, nl) {
       }
     }
     void dI;
+    for (let i = nEl0; i < els.length; i++) els[i].cid = c.id;
   }
   return { els, nN, nB, N: nN + nB, quants, errors };
 };

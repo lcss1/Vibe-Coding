@@ -19,6 +19,20 @@ Simulador de circuitos **elétricos, mecânicos rotacionais, mecânicos translac
 - **Netlist textual**, salvar/abrir em JSON e salvamento automático no navegador.
 - **8 exemplos**: controle PI de motor DC, motor em malha aberta, massa-mola-amortecedor, redutor com eixo flexível, pinhão-cremalheira, analogia RLC × massa-mola, RC e retificador.
 
+## Abas de análise e projeto de controle
+
+Além da simulação (aba principal), há três abas opcionais. Elas compartilham um mesmo sistema de controle, com **G(s)**, **H(s)** e **K** editáveis em qualquer uma delas, e **G(s) pode vir direto do esquemático**:
+
+| Aba | Ferramentas |
+|---|---|
+| **ƒ Modelagem matemática** | Função de transferência (forma polinomial e fatorada, polos e zeros, tipo, ζ e ωn, respostas ao degrau, impulso e rampa, Mp, tr, ts) · Transformada de Laplace (tabela, propriedades, inversa por frações parciais inclusive com polos repetidos/complexos, valor inicial e final) · Diagrama de blocos ↔ grafo de fluxo de sinal com **regra de Mason** passo a passo (caminhos, laços, laços que não se tocam, Δ e Δk) · Espaço de estados (formas canônicas, G(s) ⇄ A,B,C,D, controlabilidade e observabilidade) · **Do esquemático → G(s)** |
+| **⚖ Estabilidade** | Routh-Hurwitz (tabela, ε e linha nula, faixa de K estável, frequência de oscilação) · Lugar das raízes (assíntotas, separação, ângulos de partida, cruzamento com jω, linhas de ζ, K por clique, resposta em malha fechada) |
+| **∿ Frequência** | Resposta em frequência (senoide de entrada × saída, transitório e regime) · Bode (exato e assintótico, margens de ganho e fase, largura de banda, Mr) · Nyquist (contorno com indentações, contagem de voltas, Z = N + P, compressão logarítmica) |
+
+**Parte didática:** cada ferramenta tem um painel **📘 Entenda** recolhido por padrão, com a teoria resumida, fórmulas e simplificações. Cada componente do esquemático tem uma seção **📘 Sobre o componente**, com equação constitutiva, análogo nos outros domínios e uma dica prática. O botão ⓘ do visualizador explica os tipos de sinal e de gráfico.
+
+**Esquemático → G(s):** monta a MNA em s (A(s)·X = b·U), avalia det A(s) e Y/U em pontos de um círculo e recupera os polinômios por DFT. Subcircuitos desacoplados são descartados e pares polo-zero coincidentes são cancelados. As simplificações aplicadas (linearização, superposição, CI nulas) são listadas junto ao resultado.
+
 ## Biblioteca de componentes
 
 | Domínio | Componentes |
@@ -65,7 +79,16 @@ mecspice/
 ├── js/plot.js          visualizador de formas de onda
 ├── js/view3d.js        bancada 3D (Three.js)
 ├── js/examples.js      exemplos prontos
-├── js/app.js           integração da interface, arquivos, reprodução, atalhos
+├── js/app.js           integração da interface, arquivos, reprodução, atalhos, abas
+├── js/info.js          textos didáticos dos componentes
+├── js/ctrl/math.js     polinômios, raízes (Aberth), parser de G(s), frações parciais, espaço de estados, respostas
+├── js/ctrl/extract.js  esquemático → G(s)
+├── js/ctrl/chart.js    gráfico genérico (log, zoom, leitura)
+├── js/ctrl/ui.js       sistema compartilhado (G, H, K), barra do sistema, páginas e painel "Entenda"
+├── js/ctrl/blockdiag.js editor de diagrama de blocos, grafo de fluxo de sinal e regra de Mason
+├── js/ctrl/tab-model.js aba Modelagem
+├── js/ctrl/tab-stab.js  aba Estabilidade (Routh, lugar das raízes)
+├── js/ctrl/tab-freq.js  aba Frequência (resposta em frequência, Bode, Nyquist)
 └── vendor/three.min.js Three.js r149 (MIT), embutido para funcionar offline
 ```
 
@@ -88,4 +111,8 @@ O solver confere com as soluções analíticas:
 - massa-mola-amortecedor (m = 1, k = 100, b = 2, F = 10 N): pico de 0,17292 m, contra 0,17292 m da fórmula `x∞·(1 + e^(−πζ/√(1−ζ²)))`;
 - circuito RC: V(τ) = 3,151 V, contra o teórico 5·(1 − e⁻¹) = 3,161 V com passo de 10 µs;
 - redutor 1:5 invertido: ω_saída = −ω_motor/5, exato;
-- analogia: V(v_el) e v(v_mec) idênticos amostra a amostra.
+- analogia: V(v_el) e v(v_mec) idênticos amostra a amostra;
+- esquemático → G(s): massa-mola dá 1/(s² + 2s + 100), RC dá 1000/(s + 1000) e o circuito da analogia elétrica dá s/(s² + 2s + 100);
+- K/(s(s+2)(s+4)): Routh e lugar das raízes dão K crítico = 48 e ω = 2,83 rad/s; com K = 10, Bode dá MG = 13,6 dB = 20·log(48/10) e MF = 47°;
+- Nyquist de (s+2)/((s−1)(s+3)) com K = 4: P = 1, N = −1, Z = 0 (estável), conferido pelas raízes;
+- Mason confere com a redução de blocos, inclusive com laços que não se tocam (Δ = 1 − (L1+L2) + L1·L2).

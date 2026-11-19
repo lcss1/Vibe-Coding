@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Share+Tech+Mono&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body data-tab="sim">
 
 <header id="topbar">
   <div class="logo">
@@ -18,16 +18,16 @@
     </svg>
     MEC<span>SPICE</span>
   </div>
-  <div id="doc-title" contenteditable="true" spellcheck="false" title="Título do esquemático (clique para editar)">Sem título</div>
+  <div id="doc-title" class="sim-only" contenteditable="true" spellcheck="false" title="Título do esquemático (clique para editar)">Sem título</div>
 
-  <div class="tb-group">
+  <div class="tb-group sim-only">
     <button class="btn" id="btn-new" title="Novo esquemático">Novo</button>
     <button class="btn" id="btn-open" title="Abrir (Ctrl+O)">Abrir</button>
     <button class="btn" id="btn-save" title="Salvar (Ctrl+S)">Salvar</button>
     <button class="btn accent" id="btn-ex">Exemplos</button>
     <input type="file" id="file" accept=".json,application/json" hidden>
   </div>
-  <div class="tb-group">
+  <div class="tb-group sim-only">
     <button class="btn icon" id="btn-undo" title="Desfazer (Ctrl+Z)">↶</button>
     <button class="btn icon" id="btn-redo" title="Refazer (Ctrl+Y)">↷</button>
     <button class="btn icon on" data-mode="select" title="Selecionar (Esc)">⬚</button>
@@ -37,7 +37,7 @@
     <button class="btn icon" id="btn-del" title="Excluir (Del)">✕</button>
     <button class="btn icon" id="btn-fit" title="Enquadrar (F)">⤢</button>
   </div>
-  <div class="tb-group sim">
+  <div class="tb-group sim sim-only">
     <label>t<sub>stop</sub> <input id="tstop" value="1" size="5"></label>
     <label>passo <input id="dt" value="1m" size="5"></label>
     <select id="method" title="Método de integração">
@@ -48,12 +48,20 @@
     <span id="sim-status" class="pill">sem resultado</span>
   </div>
   <div class="tb-group right">
-    <button class="btn" id="btn-net" title="Ver netlist">Netlist</button>
-    <button class="btn" id="btn-3d" title="Mostrar/ocultar vista 3D">3D</button>
+    <button class="btn sim-only" id="btn-net" title="Ver netlist">Netlist</button>
+    <button class="btn sim-only" id="btn-3d" title="Mostrar/ocultar vista 3D">3D</button>
     <button class="btn icon" id="btn-help" title="Ajuda">?</button>
   </div>
   <div id="progress-wrap"><div id="progress"></div></div>
 </header>
+
+<nav id="tabs">
+  <button data-tab="sim" class="on"><span class="ti">⚡</span> Simulação</button>
+  <button data-tab="model"><span class="ti">ƒ</span> Modelagem matemática</button>
+  <button data-tab="stab"><span class="ti">⚖</span> Estabilidade</button>
+  <button data-tab="freq"><span class="ti">∿</span> Frequência</button>
+  <span class="tabs-hint" id="tabs-hint">Esquemático multidomínio com simulação no tempo e bancada 3D</span>
+</nav>
 
 <main id="app">
   <aside id="palette">
@@ -105,6 +113,7 @@
         </select>
         <button class="btn sm" id="btn-clear">Limpar traços</button>
         <button class="btn sm" id="btn-csv">Exportar CSV</button>
+        <button class="btn icon sm" id="btn-plotinfo" title="Sobre os tipos de gráfico e sinais">ⓘ</button>
         <span class="muted">arraste = zoom · duplo-clique = restaurar · clique na legenda = remover</span>
       </div>
       <div id="plot-wrap"><canvas id="plot"></canvas></div>
@@ -128,6 +137,10 @@
   </aside>
 </main>
 
+<section class="tabview" id="tab-model"></section>
+<section class="tabview" id="tab-stab"></section>
+<section class="tabview" id="tab-freq"></section>
+
 <div id="ctxmenu"></div>
 <div id="modal">
   <div class="modal-box">
@@ -143,6 +156,15 @@
 <script src="js/plot.js"></script>
 <script src="js/view3d.js"></script>
 <script src="js/examples.js"></script>
+<script src="js/info.js"></script>
+<script src="js/ctrl/math.js"></script>
+<script src="js/ctrl/extract.js"></script>
+<script src="js/ctrl/chart.js"></script>
+<script src="js/ctrl/ui.js"></script>
+<script src="js/ctrl/blockdiag.js"></script>
+<script src="js/ctrl/tab-model.js"></script>
+<script src="js/ctrl/tab-stab.js"></script>
+<script src="js/ctrl/tab-freq.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

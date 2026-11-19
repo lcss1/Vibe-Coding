@@ -15,6 +15,7 @@ const el = (tag, attrs = {}, ...kids) => {
 
 MS.App = class {
   constructor() {
+    MS.app = this;
     this.undoStack = []; this.redoStack = [];
     this.result = null; this.stale = false;
     this.practicalUnits = false;
@@ -182,6 +183,17 @@ MS.App = class {
       el('button', { class: 'btn sm', onclick: () => this.editor.rotateSel() }, '⟳ Girar (R)'),
       el('button', { class: 'btn sm', onclick: () => this.editor.duplicateSel() }, '⧉ Duplicar'),
       el('button', { class: 'btn sm danger', onclick: () => this.editor.deleteSel() }, '✕ Excluir')));
+    const inf = MS.INFO && MS.INFO[c.type];
+    if (inf) {
+      const det = el('details', { class: 'about' }, el('summary', {}, '📘 Sobre o componente'),
+        inf.eq ? el('div', { class: 'about-eq' }, inf.eq) : null,
+        el('p', {}, inf.txt),
+        inf.an ? el('p', { class: 'muted small' }, 'Análogo: ' + inf.an) : null,
+        inf.tip ? el('p', { class: 'about-tip' }, '💡 ' + inf.tip) : null);
+      if (this._aboutOpen) det.open = true;
+      det.addEventListener('toggle', () => { this._aboutOpen = det.open; });
+      host.append(det);
+    }
     const pins = d.pins.map(p => `${p[3]} (${MS.DOM[p[2]].name})`).join(' · ');
     host.append(el('div', { class: 'muted small' }, 'Pinos: ' + pins));
     if (this.result && !this.stale && this.result.compSig.has(c.id)) {
@@ -364,6 +376,9 @@ MS.App = class {
     $('#doc-title').addEventListener('blur', e => { this.doc.title = e.target.textContent.trim() || 'Sem título'; this.saveLocal(); });
     $('#doc-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
 
+    document.querySelectorAll('#tabs [data-tab]').forEach(b => b.addEventListener('click', () => this.setTab(b.dataset.tab)));
+    $('#btn-plotinfo').onclick = () => this.modal('Visualizador de formas de onda', el('div', { class: 'help', html: MS.PLOT_HELP }));
+
     // reprodução 3D
     $('#play').onclick = () => this.player.toggle();
     $('#rew').onclick = () => this.player.seek(0);
@@ -391,11 +406,13 @@ MS.App = class {
     // teclado
     window.addEventListener('keydown', e => {
       const tag = (e.target.tagName || '').toLowerCase();
+      if (this.tab && this.tab !== 'sim' && !$('#modal').classList.contains('open')) return;
       if (((e.ctrlKey || e.metaKey) && e.key === 'Enter') || e.key === 'F9') {
         e.preventDefault();
         if (tag === 'input') e.target.dispatchEvent(new Event('change'));
         this.run(); return;
       }
+      if (this.tab && this.tab !== 'sim') return;
       if (tag === 'input' || tag === 'select' || tag === 'textarea' || e.target.isContentEditable) return;
       if ($('#modal').classList.contains('open')) { if (e.key === 'Escape') this.closeModal(); return; }
       const k = e.key.toLowerCase(), ctrl = e.ctrlKey || e.metaKey;
@@ -416,6 +433,19 @@ MS.App = class {
       else if (k === ' ') { e.preventDefault(); this.player.toggle(); }
       else if (k === 'delete' || k === 'backspace') { e.preventDefault(); this.editor.deleteSel(); }
     });
+  }
+
+  /* ───── abas ───── */
+  setTab(id) {
+    this.tab = id;
+    document.body.dataset.tab = id;
+    document.querySelectorAll('#tabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
+    const hints = { sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', model: 'Do sistema físico ao modelo: G(s), blocos, espaço de estados', stab: 'O sistema em malha fechada é estável? Para quais ganhos?', freq: 'Como o sistema responde a senoides, e com que margem de segurança' };
+    $('#tabs-hint').textContent = hints[id] || '';
+    if (id === 'sim') { requestAnimationFrame(() => this.layout()); }
+    else if (!document.querySelector('#tab-' + id + ' .subnav')) MS.CS.renderTab(id);
+    else if (id === 'model' && MS.CS.current.model === 'sch') MS.CS.renderTab(id);
+    try { localStorage.setItem('mecspice.tab', id); } catch (e) { /* */ }
   }
 
   /* ───── modais ───── */
@@ -474,6 +504,14 @@ class Player {
 MS.HELP_HTML = `
 <h3>O que é</h3>
 <p>O <b>MecSPICE</b> é um simulador de circuitos no estilo LTspice que trata, numa única matriz MNA, os domínios <b style="color:#4fb3ff">elétrico</b>, <b style="color:#ff9f1c">mecânico rotacional</b> e <b style="color:#3ddc84">mecânico translacional</b>, acoplados por motores, engrenagens, pinhão-cremalheira e sensores. O resultado aparece em gráficos e numa bancada <b>3D animada</b>.</p>
+<h3>As quatro abas</h3>
+<table>
+<tr><td><b>⚡ Simulação</b></td><td>esquemático multidomínio, simulação no tempo, gráficos e bancada 3D</td></tr>
+<tr><td><b>ƒ Modelagem</b></td><td>função de transferência, Laplace (frações parciais), diagrama de blocos ↔ fluxo de sinal (Mason), espaço de estados e <i>G(s) direto do esquemático</i></td></tr>
+<tr><td><b>⚖ Estabilidade</b></td><td>Routh-Hurwitz (com casos especiais e faixa de K) e lugar das raízes interativo</td></tr>
+<tr><td><b>∿ Frequência</b></td><td>resposta em frequência, Bode (assíntotas e margens) e Nyquist (Z = N + P)</td></tr>
+</table>
+<p>As abas de controle compartilham o mesmo <b>sistema</b>: G(s), H(s) e K, editáveis na barra do topo de cada ferramenta. O botão <b>📘 Entenda</b> abre a teoria resumida de cada ferramenta, e <b>📘 Sobre o componente</b> (nas propriedades) explica cada peça do esquemático.</p>
 <h3>Analogia usada (força-corrente / mobilidade)</h3>
 <table>
 <tr><th>Elétrico</th><th>Rotacional</th><th>Translacional</th></tr>
@@ -505,4 +543,22 @@ MS.HELP_HTML = `
 <p>Passo fixo com Trapezoidal (padrão, como no LTspice) ou Euler implícito (mais amortecido, robusto com chaves). Não lineares (diodo) usam Newton-Raphson com limitação de junção. O PID é amostrado a cada passo (controlador digital ideal) com anti-windup por integração condicional.</p>
 `;
 
-window.addEventListener('DOMContentLoaded', () => { window.app = new MS.App(); });
+MS.PLOT_HELP = `
+<p>Cada <b>painel</b> agrupa os traços de mesma unidade, como no LTspice. A unidade aparece no eixo vertical.</p>
+<table>
+<tr><th>Sinal</th><th>O que é</th><th>Como obter</th></tr>
+<tr><td>V(nó), ω(nó), v(nó)</td><td>variável <i>através</i> (across): tensão, velocidade angular, velocidade</td><td>clique num fio</td></tr>
+<tr><td>θ(nó), x(nó)</td><td>ângulo / posição = integral da velocidade</td><td>Shift + clique num fio mecânico</td></tr>
+<tr><td>I, τ, F (componente)</td><td>variável <i>por</i> (through): corrente, torque, força no componente</td><td>clique no componente</td></tr>
+<tr><td>Δθ, Δx (mola)</td><td>deformação da mola = força/k</td><td>clique na mola</td></tr>
+<tr><td>Pel, Ea (motor)</td><td>potência elétrica de entrada; força contraeletromotriz</td><td>clique no motor</td></tr>
+</table>
+<p><b>Leitura:</b> passe o mouse para ver os valores no instante. Arraste na horizontal para dar zoom e use duplo-clique para restaurar. A linha amarela tracejada é o instante mostrado na bancada 3D.</p>
+<p><b>Convenção de sinais:</b> a corrente (ou força/torque) é positiva quando entra pelo 1º pino do componente. Por isso, girar um componente em 180° inverte o sinal do gráfico.</p>
+<p><b>Unidades práticas:</b> converte rad/s → RPM e rad → graus.</p>`;
+
+window.addEventListener('DOMContentLoaded', () => {
+  window.app = new MS.App();
+  let t = 'sim'; try { t = localStorage.getItem('mecspice.tab') || 'sim'; } catch (e) { /* */ }
+  window.app.setTab(t);
+});
