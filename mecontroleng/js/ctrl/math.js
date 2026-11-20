@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Matemática de sistemas de controle
+   MeControlEng — Matemática de sistemas de controle
    Polinômios (coeficientes em ordem CRESCENTE: p[0] + p[1]s + ...),
    números complexos, raízes (Aberth), funções racionais, parser de
    expressões em s, espaço de estados, respostas no tempo.

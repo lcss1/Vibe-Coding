@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Gráfico 2D genérico (Bode, Nyquist, lugar das raízes,
+   MeControlEng — Gráfico 2D genérico (Bode, Nyquist, lugar das raízes,
    respostas no tempo, mapa de polos e zeros)
    Roda do mouse = zoom · arrastar = mover · duplo-clique = restaurar
    ============================================================ */

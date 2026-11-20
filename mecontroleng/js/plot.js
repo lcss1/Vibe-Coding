@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Visualizador de formas de onda (estilo LTspice)
+   MeControlEng — Visualizador de formas de onda (estilo LTspice)
    Painéis empilhados por unidade, cursor, zoom por arrasto.
    ============================================================ */
 'use strict';

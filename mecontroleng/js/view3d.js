@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Vista 3D animada (Three.js)
+   MeControlEng — Vista 3D animada (Three.js)
    O esquemático é "montado" sobre uma bancada: eixos giram com o
    ângulo θ(t) do nó, massas/hastes deslizam com x(t), molas esticam
    e torcem, engrenagens engrenam, motores esquentam com a corrente.
@@ -65,7 +65,9 @@ MS.View3D = class {
       src: S(0x5d3a9c, 0.5, 0.4), arrow: S(0xff4d6d, 0.3, 0.4, { emissive: 0x401020 }),
       resistor: S(0xd8c39a, 0.1, 0.7, { emissive: 0x000000 }), capBlue: S(0x2763c4, 0.3, 0.4), black: S(0x15181f, 0.3, 0.5),
       pcb: S(0x0d6b3a, 0.2, 0.6), chip: S(0x111111, 0.2, 0.5), led: S(0x3dff9a, 0.1, 0.3, { emissive: 0x000000 }),
-      wire: S(0xc8742f, 0.9, 0.35), base: S(0x182640, 0.4, 0.7), band: S(0x7a2b1a, 0.2, 0.6), band2: S(0x222222, 0.2, 0.6), band3: S(0xd4a017, 0.6, 0.4),
+      wire: S(0xc8742f, 0.9, 0.35),
+      heat: S(0xb0603a, 0.6, 0.45), pipe: S(0x9fd8ff, 0.1, 0.1, { transparent: true, opacity: 0.28 }), water: S(0x2f7fd6, 0.1, 0.25, { transparent: true, opacity: 0.85 }),
+      plastic: S(0x23262d, 0.1, 0.55), dip: S(0x1a1a1e, 0.2, 0.6), pin: S(0xd0d4da, 1, 0.25), relay: S(0x2f5fb8, 0.2, 0.5), tank: S(0xbfd4ea, 0.3, 0.2, { transparent: true, opacity: 0.25, side: THREE.DoubleSide }), base: S(0x182640, 0.4, 0.7), band: S(0x7a2b1a, 0.2, 0.6), band2: S(0x222222, 0.2, 0.6), band3: S(0xd4a017, 0.6, 0.4),
     };
   }
 
@@ -126,7 +128,13 @@ MS.View3D = class {
   setResult(res) {
     this.res = res;
     this.qmax = new Map();
-    if (res) for (const [id, s] of res.signals) { let m = 0; for (let i = 0; i < s.data.length; i++) m = Math.max(m, Math.abs(s.data[i])); this.qmax.set(id, m || 1); }
+    this.trange = [20, 100];
+    if (res) {
+      for (const [id, s] of res.signals) { let m = 0; for (let i = 0; i < s.data.length; i++) m = Math.max(m, Math.abs(s.data[i])); this.qmax.set(id, m || 1); }
+      let lo = Infinity, hi = -Infinity;
+      for (const s of res.signals.values()) if (s.dom === 'H' && s.kind === 'across') for (let i = 0; i < s.data.length; i++) { lo = Math.min(lo, s.data[i]); hi = Math.max(hi, s.data[i]); }
+      if (isFinite(lo)) this.trange = [lo, Math.max(hi, lo + 1)];
+    }
   }
   setTime(t) { this.t = t; }
 
@@ -153,6 +161,13 @@ MS.View3D = class {
       qn: (cid, k) => { if (!res) return 0; const ids = res.compSig.get(cid); if (!ids) return 0; const id = ids.find(i => i.endsWith(':' + k)) || ids[0]; return Math.abs(val(id)) / (this.qmax.get(id) || 1); },
       has: !!res,
       nl,
+      sig: (cid, k) => { if (!res) return 0; const ids = res.compSig.get(cid); if (!ids) return 0; const id = ids.find(i => i.endsWith(':' + k)); return id ? val(id) : 0; },
+      /* cor de temperatura: azul (frio) → vermelho → amarelo (quente) */
+      tcolor: (color, node) => {
+        const T = res && node > 0 ? val(res.nodeSig[node]) : this.trange[0];
+        const k = Math.max(0, Math.min(1, (T - this.trange[0]) / (this.trange[1] - this.trange[0])));
+        color.setRGB(Math.min(1, 0.15 + 1.6 * k), Math.max(0.12, k > 0.6 ? (k - 0.6) * 2.2 : 0.25 - 0.2 * k), Math.max(0, 0.75 - 1.3 * k));
+      },
     };
   }
 
@@ -244,6 +259,7 @@ MS.View3D = class {
       const axX = (c.rot % 2 === 0) ? 'x' : 'z', axZ = axX === 'x' ? 'z' : 'x';
       if (['M', 'K', 'B'].includes(c.type)) { vote(nd[0], axX); vote(nd[1], axX); }
       if (c.type === 'VCOIL') vote(nd[2], axX);
+      if (c.type === 'CYL') vote(nd[1], axX);
       if (c.type === 'VSENS') vote(nd[0], axX);
       if (c.type === 'RACK') vote(nd[1], axZ);
     }
@@ -265,6 +281,15 @@ MS.View3D = class {
         const dir = nv ? (nv.x >= nv.z ? V(1, 0, 0) : V(0, 0, 1)) : V(x2 - x1, 0, y2 - y1).normalize();
         this.root.add(r.g);
         this.updaters.push(f => { r.g.position.copy(base).addScaledVector(dir, f.disp(node)); });
+      } else if (dom === 'H') {
+        const mat = M.heat.clone();
+        const r = rod(V(x1, MS.TH3D, y1), V(x2, MS.TH3D, y2), 0.07, mat, false);
+        this.root.add(r.g);
+        this.updaters.push(f => { if (f.has) f.tcolor(mat.color, node); });
+      } else if (dom === 'F') {
+        const r = rod(V(x1, MS.FH3D, y1), V(x2, MS.FH3D, y2), 0.13, M.pipe, false);
+        const core = rod(V(x1, MS.FH3D, y1), V(x2, MS.FH3D, y2), 0.085, M.water, false);
+        this.root.add(r.g, core.g);
       } else {
         const r = rod(V(x1, EH, y1), V(x2, EH, y2), 0.045, M.wire, false);
         this.root.add(r.g);
@@ -535,6 +560,8 @@ MS.View3D = class {
           up(f => { const k = Math.min(1, Math.abs(f.across(nodes[1])) / 5); led.material.emissive.setRGB(k * 0.2, k, k * 0.5); });
           break;
         }
+        default:
+          if (d.view3d) d.view3d({ T, g, M, mesh, rod, V, discX, coil, gearMesh, AX, EH, FH: MS.FH3D, TH: MS.TH3D, nodes, P, c, up, sx, sz, ang, disp, lead, elecLeads, view: this });
       }
       this.root.add(g);
     }
@@ -543,4 +570,6 @@ MS.View3D = class {
   }
 };
 MS.AX3D = 1.3;   // altura dos eixos mecânicos
+MS.FH3D = 0.75;  // altura das tubulações hidráulicas
+MS.TH3D = 0.35;  // altura das barras térmicas
 MS.EH3D = 0.25;  // altura dos componentes/fios elétricos

@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Aplicação (interface, arquivos, simulação, reprodução)
+   MeControlEng — Aplicação (interface, arquivos, simulação, reprodução)
    ============================================================ */
 'use strict';
 
@@ -46,8 +46,8 @@ MS.App = class {
   }
 
   /* ───── persistência ───── */
-  loadLocal() { try { const s = localStorage.getItem('mecspice.doc'); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
-  saveLocal() { try { localStorage.setItem('mecspice.doc', JSON.stringify(this.doc)); } catch (e) { /* sem armazenamento */ } }
+  loadLocal() { try { const s = localStorage.getItem('mecontroleng.doc'); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+  saveLocal() { try { localStorage.setItem('mecontroleng.doc', JSON.stringify(this.doc)); } catch (e) { /* sem armazenamento */ } }
 
   snapshot() { this.undoStack.push(JSON.stringify(this.doc)); if (this.undoStack.length > 200) this.undoStack.shift(); this.redoStack = []; }
   undo() { if (!this.undoStack.length) return; this.redoStack.push(JSON.stringify(this.doc)); this.doc = JSON.parse(this.undoStack.pop()); this.afterDocSwap(); }
@@ -226,7 +226,7 @@ MS.App = class {
     const node = this.editor.netAt(gx, gy);
     if (node > 0) {
       const nd = nl.nodes[node];
-      let id = (e.shiftKey && nd.dom !== 'E' ? 'p:' : 'n:') + nd.name;
+      let id = (e.shiftKey && (nd.dom === 'R' || nd.dom === 'T') ? 'p:' : 'n:') + nd.name;
       if (!this.result.signals.has(id)) { this.log(`Sinal ${id} não existe no resultado (simule novamente).`, 'warn'); return; }
       this.plot.add(id); return;
     }
@@ -262,6 +262,15 @@ MS.App = class {
     this.saveLocal();
   }
 
+  /* valor de uma grandeza de componente no instante da reprodução */
+  liveVal(cid, k) {
+    const r = this.result;
+    if (!r || this.stale) return null;
+    const ids = r.compSig.get(cid); if (!ids) return null;
+    const id = ids.find(i => i.endsWith(':' + k)); if (!id) return null;
+    return this.plot.valueAt(r.signals.get(id), this.player.t, 1);
+  }
+
   /* ───── simulação ───── */
   async run() {
     if (this.running) { this.cancelReq = true; return; }
@@ -291,6 +300,7 @@ MS.App = class {
       const first = [...res.signals.values()].filter(s => s.kind === 'across').slice(0, 2);
       first.forEach(s => this.plot.add(s.id));
     }
+    this.hasLive = this.doc.comps.some(c => MS.DEFS[c.type].live);
     this.rebuild3D();
     this.player.reset(); this.player.play();
     this.renderSignals();
@@ -334,7 +344,7 @@ MS.App = class {
   }
   save() {
     this.doc.sim.tstop = $('#tstop').value; this.doc.sim.dt = $('#dt').value; this.doc.sim.method = $('#method').value;
-    const name = (this.doc.title || 'circuito').replace(/[^\w\-]+/g, '_') + '.mecspice.json';
+    const name = (this.doc.title || 'circuito').replace(/[^\w\-]+/g, '_') + '.mecontroleng.json';
     this.download(name, JSON.stringify(this.doc, null, 1));
     this.log('Arquivo salvo: ' + name, 'ok');
   }
@@ -377,6 +387,7 @@ MS.App = class {
     $('#doc-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
 
     document.querySelectorAll('#tabs [data-tab]').forEach(b => b.addEventListener('click', () => this.setTab(b.dataset.tab)));
+    document.querySelectorAll('#subtabs [data-sub]').forEach(b => b.addEventListener('click', () => this.setSub(b.dataset.sub)));
     $('#btn-plotinfo').onclick = () => this.modal('Visualizador de formas de onda', el('div', { class: 'help', html: MS.PLOT_HELP }));
 
     // reprodução 3D
@@ -437,15 +448,24 @@ MS.App = class {
 
   /* ───── abas ───── */
   setTab(id) {
+    if (!['sim', 'ctrl', 'mec', 'ele'].includes(id)) id = 'sim';
     this.tab = id;
     document.body.dataset.tab = id;
     document.querySelectorAll('#tabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
-    const hints = { sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', model: 'Do sistema físico ao modelo: G(s), blocos, espaço de estados', stab: 'O sistema em malha fechada é estável? Para quais ganhos?', freq: 'Como o sistema responde a senoides, e com que margem de segurança' };
+    const hints = { sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', ctrl: 'Modelagem, estabilidade, frequência e CLP', mec: 'Ferramentas de engenharia mecânica (em construção)', ele: 'Ferramentas de engenharia elétrica (em construção)' };
     $('#tabs-hint').textContent = hints[id] || '';
-    if (id === 'sim') { requestAnimationFrame(() => this.layout()); }
-    else if (!document.querySelector('#tab-' + id + ' .subnav')) MS.CS.renderTab(id);
+    if (id === 'sim') requestAnimationFrame(() => this.layout());
+    if (id === 'ctrl') this.setSub(this.sub || 'model');
+    try { localStorage.setItem('mecontroleng.tab', id); } catch (e) { /* */ }
+  }
+  /* sub-abas de Controle e Automação */
+  setSub(id) {
+    this.sub = id;
+    $('#tab-ctrl').dataset.sub = id;
+    document.querySelectorAll('#subtabs [data-sub]').forEach(b => b.classList.toggle('on', b.dataset.sub === id));
+    if (!document.querySelector('#tab-' + id + ' .subnav')) MS.CS.renderTab(id);
     else if (id === 'model' && MS.CS.current.model === 'sch') MS.CS.renderTab(id);
-    try { localStorage.setItem('mecspice.tab', id); } catch (e) { /* */ }
+    try { localStorage.setItem('mecontroleng.sub', id); } catch (e) { /* */ }
   }
 
   /* ───── modais ───── */
@@ -466,7 +486,7 @@ MS.App = class {
     this.modal('Exemplos', grid, true);
   }
   showHelp() {
-    this.modal('Ajuda — MecSPICE', el('div', { class: 'help', html: MS.HELP_HTML }), true);
+    this.modal('Ajuda — MeControlEng', el('div', { class: 'help', html: MS.HELP_HTML }), true);
   }
 };
 
@@ -492,6 +512,7 @@ class Player {
     const res = this.app.result;
     if (this.app.v3d && !this.app.v3d.disabled) this.app.v3d.setTime(this.t);
     this.app.plot.cursorT = res ? this.t : null; this.app.plot.redraw();
+    if (res && this.app.hasLive) this.app.editor.redraw();
     if (res) { $('#tslider').value = Math.round(this.t / res.tstop * 1000); $('#tlabel').textContent = 't = ' + MS.fmt(this.t, 's', 4); }
   }
   play() { this.playing = true; $('#play').textContent = '❚❚'; }
@@ -503,27 +524,24 @@ class Player {
 
 MS.HELP_HTML = `
 <h3>O que é</h3>
-<p>O <b>MecSPICE</b> é um simulador de circuitos no estilo LTspice que trata, numa única matriz MNA, os domínios <b style="color:#4fb3ff">elétrico</b>, <b style="color:#ff9f1c">mecânico rotacional</b> e <b style="color:#3ddc84">mecânico translacional</b>, acoplados por motores, engrenagens, pinhão-cremalheira e sensores. O resultado aparece em gráficos e numa bancada <b>3D animada</b>.</p>
-<h3>As quatro abas</h3>
+<p>O <b>MeControlEng</b> é um ambiente de engenharia com um simulador multidomínio no estilo LTspice. Numa única matriz MNA ele trata os domínios <b style="color:#4fb3ff">elétrico</b>, <b style="color:#ff9f1c">rotacional</b>, <b style="color:#3ddc84">translacional</b>, <b style="color:#ff6b6b">térmico</b> e <b style="color:#2dd4bf">fluídico</b>, acoplados por motores, engrenagens, bombas, cilindros, aquecedores e sensores. Os resultados aparecem em gráficos e numa bancada <b>3D animada</b>.</p>
+<h3>Abas</h3>
 <table>
-<tr><td><b>⚡ Simulação</b></td><td>esquemático multidomínio, simulação no tempo, gráficos e bancada 3D</td></tr>
-<tr><td><b>ƒ Modelagem</b></td><td>função de transferência, Laplace (frações parciais), diagrama de blocos ↔ fluxo de sinal (Mason), espaço de estados e <i>G(s) direto do esquemático</i></td></tr>
-<tr><td><b>⚖ Estabilidade</b></td><td>Routh-Hurwitz (com casos especiais e faixa de K) e lugar das raízes interativo</td></tr>
-<tr><td><b>∿ Frequência</b></td><td>resposta em frequência, Bode (assíntotas e margens) e Nyquist (Z = N + P)</td></tr>
+<tr><td><b>⚡ Simulação</b></td><td>esquemático, simulação no tempo, gráficos e bancada 3D (aba principal)</td></tr>
+<tr><td><b>◎ Controle e Automação</b></td><td><b>Modelagem matemática</b> (G(s), Laplace, blocos ↔ fluxo de sinal, espaço de estados, G(s) do esquemático) · <b>Estabilidade</b> (Routh-Hurwitz, lugar das raízes) · <b>Frequência</b> (resposta em frequência, Bode, Nyquist) · <b>CLP</b> (Ladder com simulação e plantas virtuais)</td></tr>
+<tr><td><b>⚙ Mecânica</b> · <b>⌁ Elétrica</b></td><td>reservadas para as próximas ferramentas</td></tr>
 </table>
-<p>As abas de controle compartilham o mesmo <b>sistema</b>: G(s), H(s) e K, editáveis na barra do topo de cada ferramenta. O botão <b>📘 Entenda</b> abre a teoria resumida de cada ferramenta, e <b>📘 Sobre o componente</b> (nas propriedades) explica cada peça do esquemático.</p>
+<p>O botão <b>📘 Entenda</b> abre a teoria resumida de cada ferramenta, e <b>📘 Sobre o componente</b> (nas propriedades) explica cada peça do esquemático.</p>
 <h3>Analogia usada (força-corrente / mobilidade)</h3>
 <table>
-<tr><th>Elétrico</th><th>Rotacional</th><th>Translacional</th></tr>
-<tr><td>Tensão V (nó)</td><td>Vel. angular ω</td><td>Velocidade v</td></tr>
-<tr><td>Corrente I (ramo)</td><td>Torque τ</td><td>Força F</td></tr>
-<tr><td>Capacitor C (ao terra)</td><td>Inércia J</td><td>Massa m</td></tr>
-<tr><td>Indutor L</td><td>Mola 1/k</td><td>Mola 1/k</td></tr>
-<tr><td>Resistor R</td><td>Amortecedor 1/b</td><td>Amortecedor 1/b</td></tr>
-<tr><td>Transformador</td><td colspan="2">Engrenagem (ω₁ = n·ω₂) · Pinhão-cremalheira (v = r·ω)</td></tr>
-<tr><td colspan="3">Motor DC: V = Ra·i + La·di/dt + K·ω &nbsp;·&nbsp; τ = K·i (girador eletromecânico)</td></tr>
+<tr><th></th><th>Elétrico</th><th>Rotacional</th><th>Translacional</th><th>Térmico</th><th>Fluídico</th></tr>
+<tr><td>Nó (across)</td><td>tensão V</td><td>vel. angular ω</td><td>velocidade v</td><td>temperatura T</td><td>pressão p</td></tr>
+<tr><td>Ramo (through)</td><td>corrente I</td><td>torque τ</td><td>força F</td><td>fluxo de calor q</td><td>vazão Q</td></tr>
+<tr><td>"Capacitor"</td><td>C</td><td>inércia J</td><td>massa m</td><td>m·c</td><td>tanque A/(ρg)</td></tr>
+<tr><td>"Indutor"</td><td>L</td><td>mola 1/k</td><td>mola 1/k</td><td>—</td><td>inertância ρL/A</td></tr>
+<tr><td>"Resistor"</td><td>R</td><td>1/b</td><td>1/b</td><td>Rθ, 1/(hA)</td><td>válvula/tubo</td></tr>
 </table>
-<p>Elementos ligados “à referência” (massa, inércia) já estão presos ao referencial inercial internamente. A <b>Parede</b> e o <b>Mancal fixo</b> são o “terra” mecânico (v = 0, ω = 0). Cada nó só pode ter um domínio: para passar de um domínio a outro use um acoplamento.</p>
+<p>Acoplamentos: motor DC e bobina móvel (giradores), engrenagem e pinhão-cremalheira (transformadores), bomba (ω → Q) e cilindro (p → F), aquecedor (V²/R → calor), sensores (tacômetro, LM35, nível). Cada nó tem um único domínio; para passar de um a outro, use um acoplamento.</p>
 <h3>Atalhos</h3>
 <table>
 <tr><td><kbd>W</kbd></td><td>desenhar fio</td><td><kbd>R</kbd></td><td>girar</td></tr>
@@ -559,6 +577,6 @@ MS.PLOT_HELP = `
 
 window.addEventListener('DOMContentLoaded', () => {
   window.app = new MS.App();
-  let t = 'sim'; try { t = localStorage.getItem('mecspice.tab') || 'sim'; } catch (e) { /* */ }
+  let t = 'sim'; try { t = localStorage.getItem('mecontroleng.tab') || 'sim'; window.app.sub = localStorage.getItem('mecontroleng.sub') || 'model'; } catch (e) { /* */ }
   window.app.setTab(t);
 });

@@ -1,8 +1,8 @@
-# MecSPICE — simulador multidomínio (elétrico + mecânico) estilo LTspice
+# MeControlEng — ambiente de engenharia: simulação multidomínio, controle e automação
 
-Simulador de circuitos **elétricos, mecânicos rotacionais, mecânicos translacionais e eletromecânicos** num único esquemático, com análise transitória, visualizador de formas de onda e uma **bancada 3D animada** (Three.js). Evolução do simulador de controle de velocidade de motor DC do Grupo 8: o motor, o PI e o tacômetro agora são componentes que você liga como quiser.
+Simulador de circuitos **elétricos/eletrônicos, mecânicos (rotacionais e translacionais), térmicos, fluídicos e eletromecânicos** num único esquemático, com análise transitória, visualizador de formas de onda e uma **bancada 3D animada** (Three.js). Evolução do simulador de controle de velocidade de motor DC do Grupo 8: o motor, o PI e o tacômetro agora são componentes que você liga como quiser.
 
-![MecSPICE](docs/screenshot.png)
+![MeControlEng](docs/screenshot.png)
 
 > Abra `index.html` no navegador (funciona offline, inclusive via `file://`). Não precisa de servidor nem de instalação.
 
@@ -17,11 +17,24 @@ Simulador de circuitos **elétricos, mecânicos rotacionais, mecânicos translac
 - **Ponta de prova** como no LTspice: clique num fio para ver V / ω / v, Shift+clique para θ / x e clique num componente para I / τ / F.
 - **Bancada 3D**: eixos giram com θ(t), engrenagens engrenam, molas esticam e torcem, massas deslizam, amortecedores mostram o pistão, motores esquentam (emissivo) com a corrente, e a chave liga e desliga. A reprodução fica sincronizada com o cursor do gráfico.
 - **Netlist textual**, salvar/abrir em JSON e salvamento automático no navegador.
-- **8 exemplos**: controle PI de motor DC, motor em malha aberta, massa-mola-amortecedor, redutor com eixo flexível, pinhão-cremalheira, analogia RLC × massa-mola, RC e retificador.
+- **21 exemplos**, entre eles: fonte de alimentação completa (transformador + ponte + filtro + 7805), contador 0–9 com 555 + 4026 + display, relé acionado por transistor, PWM com MOSFET, AmpOp inversor, Zener, fotodiodo, aquecimento e controle PID de temperatura, nível de tanque, controle de nível PID com válvula proporcional, cilindro hidráulico e os exemplos originais: controle PI de motor DC, motor em malha aberta, massa-mola-amortecedor, redutor com eixo flexível, pinhão-cremalheira, analogia RLC × massa-mola, RC e retificador.
 
-## Abas de análise e projeto de controle
+## Organização das abas
 
-Além da simulação (aba principal), há três abas opcionais. Elas compartilham um mesmo sistema de controle, com **G(s)**, **H(s)** e **K** editáveis em qualquer uma delas, e **G(s) pode vir direto do esquemático**:
+| Aba principal | Conteúdo |
+|---|---|
+| **⚡ Simulação** | esquemático multidomínio, transitório, gráficos, bancada 3D (aba principal) |
+| **◎ Controle e Automação** | sub-abas **Modelagem matemática**, **Estabilidade**, **Frequência** e **CLP** |
+| **⚙ Mecânica** | reservada (sub-abas a definir) |
+| **⌁ Elétrica** | reservada (sub-abas a definir) |
+
+### CLP (Ladder)
+
+Editor de diagrama Ladder com simulação do **ciclo de varredura** (50 ms): contatos NA, NF e de borda (P/N), bobinas ( ), (/), SET, RESET, temporizadores **TON/TOF**, contador **CTU**, ramos paralelos e comentários. Os endereços seguem o estilo IEC/Siemens (I0.x, Q0.x, M, T, C) com tabela de nomes (tags) e valores em tempo real. O painel virtual tem botões (pulso) e chaves de entrada, lâmpadas de saída e plantas animadas: **partida de motor**, **tanque com sensores de nível** e **semáforo**. Exemplos: partida com selo, pisca-pisca, semáforo, nível com SET/RESET, contador de peças e reversão com intertravamento.
+
+## Sub-abas de Modelagem, Estabilidade e Frequência
+
+Elas compartilham um mesmo sistema de controle, com **G(s)**, **H(s)** e **K** editáveis em qualquer uma delas, e **G(s) pode vir direto do esquemático**:
 
 | Aba | Ferramentas |
 |---|---|
@@ -37,7 +50,12 @@ Além da simulação (aba principal), há três abas opcionais. Elas compartilha
 
 | Domínio | Componentes |
 |---|---|
-| Elétrico | Resistor, Capacitor, Indutor, Fonte de tensão, Fonte de corrente, Diodo, Chave temporizada, Terra |
+| Elétrico | Resistor, Capacitor, Indutor, Fonte de tensão, Fonte de corrente, Diodo, Chave temporizada, Terra, **Relé**, **Transformador** |
+| Semicondutores | **Diodo Zener**, **LED** (5 cores, acende no esquemático e no 3D), **Fotodiodo**, **Transistores NPN e PNP** (Ebers-Moll), **MOSFET canal N e P** |
+| CIs e digitais | **Regulador 78xx**, **Amplificador operacional**, **Porta lógica 74xx** (AND/OR/NAND/NOR/XOR/NOT), **Contador 4026** com decodificador, **Display de 7 segmentos**, **Temporizador 555** |
+| Instrumentos | **Voltímetro** e **Amperímetro** (leitura ao vivo no esquemático) |
+| Térmico | Resistência térmica, Convecção (h·A), Capacitância térmica (m·c), Fonte de temperatura, Fonte de calor, Referência, **Resistor de aquecimento** (elétrico → térmico), **Sensor LM35** |
+| Fluídico | Resistência hidráulica, Inertância, **Tanque**, Fontes de pressão e de vazão, Referência atmosférica, **Bomba acionada por eixo** (ω → Q), **Cilindro hidráulico** (p → F), **Válvula proporcional**, **Sensor de nível** |
 | Rotacional | Inércia (volante), Mola torcional, Amortecedor rotacional, Fonte de torque, Fonte de vel. angular, Mancal fixo, Engrenagem/redutor |
 | Translacional | Massa, Mola, Amortecedor, Fonte de força, Fonte de velocidade, Parede |
 | Eletromecânico | Motor DC (Ra, La, K, J, B), Atuador linear de bobina móvel (Bl), Pinhão-cremalheira |
@@ -70,7 +88,7 @@ Os acoplamentos entram como **ramos extras** da matriz MNA:
 ## Arquitetura dos arquivos
 
 ```
-mecspice/
+mecontroleng/
 ├── index.html          interface
 ├── css/style.css       tema escuro
 ├── js/core.js          utilidades, prefixos SI, formas de onda, biblioteca de componentes (símbolos)
@@ -81,6 +99,10 @@ mecspice/
 ├── js/examples.js      exemplos prontos
 ├── js/app.js           integração da interface, arquivos, reprodução, atalhos, abas
 ├── js/info.js          textos didáticos dos componentes
+├── js/parts/devices.js     modelos não lineares (junção, BJT, MOSFET, regulador, AmpOp)
+├── js/parts/electronics.js componentes eletrônicos (símbolo, modelo, visual ao vivo, 3D)
+├── js/parts/thermofluid.js domínios térmico e fluídico
+├── js/ctrl/plc.js      CLP: editor Ladder, ciclo de varredura, plantas virtuais
 ├── js/ctrl/math.js     polinômios, raízes (Aberth), parser de G(s), frações parciais, espaço de estados, respostas
 ├── js/ctrl/extract.js  esquemático → G(s)
 ├── js/ctrl/chart.js    gráfico genérico (log, zoom, leitura)
@@ -92,11 +114,12 @@ mecspice/
 └── vendor/three.min.js Three.js r149 (MIT), embutido para funcionar offline
 ```
 
-### Para adicionar um componente novo
+### Para adicionar um componente novo (arquitetura de plugins)
 
-1. Em `core.js`, crie uma entrada em `MS.DEFS` com pinos `[x, y, domínio, nome]`, parâmetros e a função `draw`.
-2. Em `solver.js`, dentro de `MS.buildCircuit`, traduza o componente em elementos primitivos (`G`, `C`, `L`, `V`, `I`, `D`, `XF`, `EMC`, `E`...) e declare as grandezas plotáveis com `Q(...)`.
-3. Se quiser, em `view3d.js`, acrescente um `case` com a geometria 3D e a função de atualização.
+Crie uma entrada em `MS.DEFS` (veja `js/parts/*.js`) com:
+- `pins`: `[x, y, domínio, nome]`, `params`, `draw(g, c, S)` (símbolo);
+- `build(x)`: traduz o componente em elementos primitivos — `G`, `C`, `L`, `V`, `I`, `XF` (transformador), `GY` (girador), `EMC`, `E` (fonte controlada), `NL` (não linear com Newton: devolve correntes e jacobiano), `CTRL` (lógica amostrada a cada passo: digitais, relés, válvulas) — e declara grandezas com `x.Q(...)`;
+- opcionais: `live(g, c, S)` (visual ao vivo no esquemático, usando `S.q('grandeza')`) e `view3d(k)` (peça 3D).
 
 ## Atalhos
 

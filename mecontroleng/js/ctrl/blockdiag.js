@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Diagrama de blocos ↔ Grafo de fluxo de sinal + Mason
+   MeControlEng — Diagrama de blocos ↔ Grafo de fluxo de sinal + Mason
    ============================================================ */
 'use strict';
 (function () {
@@ -83,9 +83,9 @@
     return { blocks: p.blocks.map(b => ({ ...b })), links: p.links.map(([f, t, port]) => ({ id: MS.uid(), from: f, to: t, port })) };
   };
   CS.BD_PRESETS = PRE;
-  const load = () => { try { const d = JSON.parse(localStorage.getItem('mecspice.bd')); if (d && d.blocks) return d; } catch (e) { /* */ } return fromPreset('fb'); };
+  const load = () => { try { const d = JSON.parse(localStorage.getItem('mecontroleng.bd')); if (d && d.blocks) return d; } catch (e) { /* */ } return fromPreset('fb'); };
   CS.bd = load();
-  const save = () => { try { localStorage.setItem('mecspice.bd', JSON.stringify(CS.bd)); } catch (e) { /* */ } };
+  const save = () => { try { localStorage.setItem('mecontroleng.bd', JSON.stringify(CS.bd)); } catch (e) { /* */ } };
 
   /* ───────── diagrama → grafo de fluxo de sinal ───────── */
   CS.bdToSFG = function (bd) {

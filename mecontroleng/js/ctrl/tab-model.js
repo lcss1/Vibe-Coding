@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Aba "Modelagem matemática"
+   MeControlEng — Aba "Modelagem matemática"
    Função de transferência · Laplace · Blocos & fluxo de sinal ·
    Espaço de estados · Do esquemático
    ============================================================ */

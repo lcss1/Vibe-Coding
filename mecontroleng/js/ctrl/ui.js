@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Infraestrutura das abas de Controle
+   MeControlEng — Infraestrutura das abas de Controle
    Estado compartilhado do sistema (G, H, K), barra do sistema,
    páginas com painel "Entenda" recolhível.
    ============================================================ */
@@ -19,13 +19,13 @@
 
   /* ───────── estado compartilhado ───────── */
   const DEF = { G: '1/(s(s+2)(s+4))', H: '1', K: '10', name: 'Tipo 1, 3ª ordem' };
-  const st = CS.state = (() => { try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem('mecspice.cs') || '{}')); } catch (e) { return { ...DEF }; } })();
+  const st = CS.state = (() => { try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem('mecontroleng.cs') || '{}')); } catch (e) { return { ...DEF }; } })();
   const listeners = new Set();
   CS.onChange = fn => listeners.add(fn);
   CS.offChange = fn => listeners.delete(fn);
   CS.setSys = (patch, silent) => {
     Object.assign(st, patch);
-    try { localStorage.setItem('mecspice.cs', JSON.stringify(st)); } catch (e) { /* */ }
+    try { localStorage.setItem('mecontroleng.cs', JSON.stringify(st)); } catch (e) { /* */ }
     if (!silent) for (const fn of listeners) fn(st);
   };
   /* objetos racionais do sistema atual */
@@ -120,7 +120,7 @@
   CS.registerTab = (id, def) => { CS.TABS[id] = def; };
   CS.current = {};
   CS.openTool = (tabId, toolId) => {
-    MS.app.setTab(tabId);
+    MS.app.setTab('ctrl'); MS.app.setSub(tabId);
     CS.renderTab(tabId, toolId);
   };
   CS.renderTab = (tabId, toolId) => {

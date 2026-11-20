@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Aba "Análise e projeto na frequência"
+   MeControlEng — Aba "Análise e projeto na frequência"
    Resposta em frequência · Bode · Nyquist
    ============================================================ */
 'use strict';

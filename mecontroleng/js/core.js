@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — núcleo: utilidades, domínios e biblioteca de componentes
+   MeControlEng — núcleo: utilidades, domínios e biblioteca de componentes
    ============================================================ */
 'use strict';
 const MS = window.MS = window.MS || {};
@@ -11,6 +11,8 @@ MS.DOM = {
   E: { name: 'Elétrico',      color: '#4fb3ff', across: 'Tensão',       au: 'V',     through: 'Corrente', tu: 'A' },
   R: { name: 'Rotacional',    color: '#ff9f1c', across: 'Vel. angular', au: 'rad/s', through: 'Torque',   tu: 'N·m', pos: 'Ângulo',  pu: 'rad' },
   T: { name: 'Translacional', color: '#3ddc84', across: 'Velocidade',   au: 'm/s',   through: 'Força',    tu: 'N',   pos: 'Posição', pu: 'm' },
+  H: { name: 'Térmico', color: '#ff6b6b', across: 'Temperatura', au: '°C', through: 'Fluxo de calor', tu: 'W' },
+  F: { name: 'Fluídico', color: '#2dd4bf', across: 'Pressão', au: 'Pa', through: 'Vazão', tu: 'm³/s' },
   A: { name: 'Qualquer',      color: '#c3cad8' },
 };
 
@@ -69,6 +71,7 @@ const WAVE = (u, defVal) => [
   { k: 'ton', l: 'Largura do pulso', u: 's', def: '0.5', show: p => p.forma === 'PULSO' },
   { k: 'per', l: 'Período', u: 's', def: '1', show: p => p.forma === 'PULSO' },
 ];
+MS.WAVE = WAVE;
 MS.makeWave = function (c) {
   const P = k => MS.parseEng(c.params[k]);
   const f = c.params.forma || 'DC';
@@ -379,7 +382,7 @@ MS.DEFS = {
   },
 };
 
-MS.CATS = ['Elétrico', 'Rotacional', 'Translacional', 'Eletromecânico', 'Controle & sensores'];
+MS.CATS = ['Elétrico', 'Semicondutores', 'CIs & digitais', 'Instrumentos', 'Rotacional', 'Translacional', 'Eletromecânico', 'Térmico', 'Fluídico', 'Controle & sensores'];
 
 MS.newComp = function (type, x, y, rot, doc) {
   const d = MS.DEFS[type];

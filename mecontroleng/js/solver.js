@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Netlist + Solver MNA (Modified Nodal Analysis) multidomínio
+   MeControlEng — Netlist + Solver MNA (Modified Nodal Analysis) multidomínio
    ------------------------------------------------------------
    Analogia força-corrente (mobilidade):
      nó   : tensão V  | vel. angular ω | velocidade v       (across)
@@ -234,6 +234,8 @@ MS.buildCircuit = function (doc, nl) {
         els.push(e);
         Q('u', 'u', 'V', () => e.u); Q('e', 'e', 'V', () => e.err); break;
       }
+      default:
+        if (d.build) d.build({ c, n, P, pos, Q, br, els, errors, wave: () => MS.makeWave(c), nN });
     }
     void dI;
     for (let i = nEl0; i < els.length; i++) els[i].cid = c.id;
@@ -262,8 +264,8 @@ MS.simulate = async function (doc, opt = {}) {
   const recEvery = Math.max(1, Math.ceil(steps / MAXREC));
   const nRec = Math.floor(steps / recEvery) + 1;
 
-  const nonlinear = els.some(e => e.t === 'D');
-  const timevar = els.some(e => e.t === 'SW');
+  const nonlinear = els.some(e => e.t === 'D' || e.t === 'NL');
+  const timevar = els.some(e => e.t === 'SW' || (e.t === 'CTRL' && !e.rhsOnly) || e.var);
 
   const A = new Float64Array(N * N), rhs = new Float64Array(N);
   const LU = new Float64Array(N * N), perm = new Int32Array(N), ytmp = new Float64Array(N);
@@ -276,6 +278,8 @@ MS.simulate = async function (doc, opt = {}) {
     if (e.t === 'C') { e.v = e.v0 || 0; e.i = 0; if (e.b === 0 && e.a > 0) xPrev[e.a - 1] = e.v; else if (e.a === 0 && e.b > 0) xPrev[e.b - 1] = -e.v; }
     if (e.t === 'L') { e.j = e.i0 || 0; e.v = 0; xPrev[e.k] = e.j; }
     if (e.t === 'EMC') { e.j = 0; e.vL = 0; }
+    if (e.t === 'XFMR') { e.j1 = 0; e.j2 = 0; e.vL1 = 0; e.vL2 = 0; }
+    if (e.init) e.init();
   }
 
   // armazenamento de resultados
@@ -321,8 +325,10 @@ MS.simulate = async function (doc, opt = {}) {
       else if (u < e.umin) { u = e.umin; if (err < 0) integ = e.integ; }
       e.integ = integ; e.eprev = err; e.u = u; e.err = err;
     }
+    const Xp = nd => (nd > 0 ? xPrev[nd - 1] : 0);
+    for (const e of els) if (e.t === 'CTRL') e.pre(t, Xp, h, xPrev);
     for (const e of els) {
-      if (e.t === 'I' || e.t === 'V') e.val = e.fn(t);
+      if ((e.t === 'I' || e.t === 'V') && e.fn) e.val = e.fn(t);
       if (e.t === 'SW') e.g = (t >= e.ton && t < e.toff) ? e.gon : e.goff;
     }
 
@@ -372,6 +378,30 @@ MS.simulate = async function (doc, opt = {}) {
           }
           case 'E': { aA(e.o - 1, e.k, 1); aA(e.k, e.o - 1, 1); aA(e.k, e.s - 1, -e.K); break; }
           case 'PID': { aA(e.o - 1, e.k, 1); aA(e.k, e.o - 1, 1); aB(e.k, e.u); break; }
+          case 'GY': for (const [r, c2, v] of e.ent) aA(r - 1, c2 - 1, v); break;
+          case 'NL': {
+            const vv = e.nodes.map(nd => X(xIt, nd));
+            const r = e.ev(vv, true);
+            e.v0 = r.v0;
+            const nn = e.nodes.length;
+            for (let k = 0; k < nn; k++) {
+              const rk = e.nodes[k] - 1; if (rk < 0) continue;
+              let sacc = r.i[k];
+              for (let j = 0; j < nn; j++) { const gkj = r.G[k][j]; if (gkj) { aA(rk, e.nodes[j] - 1, gkj); sacc -= gkj * r.v0[j]; } }
+              aB(rk, -sacc);
+            }
+            break;
+          }
+          case 'XFMR': {
+            const c1 = m === 'be' ? 1 / h : 2 / h;
+            aA(e.p1 - 1, e.k1, 1); aA(e.p2 - 1, e.k1, -1); aA(e.s1 - 1, e.k2, 1); aA(e.s2 - 1, e.k2, -1);
+            aA(e.k1, e.p1 - 1, 1); aA(e.k1, e.p2 - 1, -1); aA(e.k2, e.s1 - 1, 1); aA(e.k2, e.s2 - 1, -1);
+            aA(e.k1, e.k1, -(e.R1 + c1 * e.L1)); aA(e.k1, e.k2, -c1 * e.M);
+            aA(e.k2, e.k2, -(e.R2 + c1 * e.L2)); aA(e.k2, e.k1, -c1 * e.M);
+            aB(e.k1, -c1 * (e.L1 * e.j1 + e.M * e.j2) - (m === 'be' ? 0 : e.vL1));
+            aB(e.k2, -c1 * (e.L2 * e.j2 + e.M * e.j1) - (m === 'be' ? 0 : e.vL2));
+            break;
+          }
         }
       }
       const key = m;
@@ -385,6 +415,7 @@ MS.simulate = async function (doc, opt = {}) {
       if (!nonlinear) { converged = true; break; }
       let ok = true;
       for (let i = 0; i < N; i++) { if (Math.abs(x[i] - xIt[i]) > 1e-6 + 1e-4 * Math.abs(x[i])) { ok = false; break; } }
+      if (ok) for (const e of els) if (e.t === 'NL') { for (let k = 0; k < e.nodes.length; k++) { const xv = X(x, e.nodes[k]); if (Math.abs(xv - e.v0[k]) > 1e-6 + 1e-5 * Math.abs(xv)) { ok = false; break; } } if (!ok) break; }
       if (ok) for (const e of els) if (e.t === 'D') { if (Math.abs((X(x, e.a) - X(x, e.b)) - e.vd) > 1e-5) { ok = false; break; } }
       xIt.set(x);
       if (ok && it > 0) { converged = true; break; }
@@ -397,6 +428,11 @@ MS.simulate = async function (doc, opt = {}) {
       if (e.t === 'C') { const v = X(x, e.a) - X(x, e.b); e.i = e.geq * v - e.ieq; e.v = v; }
       else if (e.t === 'L') { e.j = x[e.k]; e.v = X(x, e.a) - X(x, e.b); }
       else if (e.t === 'EMC') { e.j = x[e.k]; e.vL = X(x, e.p) - X(x, e.m) - e.K * X(x, e.s) - e.Ra * e.j; }
+      else if (e.t === 'XFMR') {
+        e.j1 = x[e.k1]; e.j2 = x[e.k2];
+        e.vL1 = X(x, e.p1) - X(x, e.p2) - e.R1 * e.j1; e.vL2 = X(x, e.s1) - X(x, e.s2) - e.R2 * e.j2;
+      }
+      if (e.post) e.post(t, nd => X(x, nd), x);
     }
     for (let i = 1; i <= nN; i++) pos[i] += 0.5 * (xPrev[i - 1] + x[i - 1]) * h;
 
@@ -417,11 +453,11 @@ MS.simulate = async function (doc, opt = {}) {
   for (let i = 1; i <= nN; i++) {
     const nd = nl.nodes[i];
     const D = MS.DOM[nd.dom];
-    const sym = nd.dom === 'E' ? 'V' : nd.dom === 'R' ? 'ω' : 'v';
+    const sym = { E: 'V', R: 'ω', T: 'v', H: 'T', F: 'p' }[nd.dom] || 'V';
     const id = 'n:' + nd.name;
     signals.set(id, { id, label: `${sym}(${nd.name})`, u: D.au, dom: nd.dom, data: nodeData[i].subarray(0, rec), kind: 'across' });
     nodeSig[i] = id;
-    if (nd.dom !== 'E') {
+    if (nd.dom === 'R' || nd.dom === 'T') {
       const pid = 'p:' + nd.name;
       signals.set(pid, { id: pid, label: `${nd.dom === 'R' ? 'θ' : 'x'}(${nd.name})`, u: D.pu, dom: nd.dom, data: posData[i].subarray(0, rec), kind: 'pos' });
       posSig[i] = pid;
@@ -446,7 +482,7 @@ MS.simulate = async function (doc, opt = {}) {
 MS.netlistText = function (doc) {
   const nl = MS.netlist(doc);
   const nm = i => (i < 0 ? '?' : nl.nodes[i].name);
-  const lines = ['* MecSPICE — netlist multidomínio (analogia força-corrente)', '* nós: V (elétrico) | ω (rotacional) | v (translacional)', ''];
+  const lines = ['* MeControlEng — netlist multidomínio (analogia força-corrente)', '* nós: V (elétrico) | ω (rotacional) | v (translacional)', ''];
   for (const c of doc.comps) {
     const d = MS.DEFS[c.type];
     if (d.ground || c.type === 'LABEL') continue;

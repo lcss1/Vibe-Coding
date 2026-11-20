@@ -1,3 +1,3 @@
 # Vibe-Coding
 
-- [`mecspice/`](mecspice/): **MecSPICE**, um simulador multidomínio estilo LTspice com partes elétrica, mecânica rotacional, mecânica translacional e eletromecânica, gráficos e bancada 3D animada. Abra `mecspice/index.html` no navegador.
+- [`mecontroleng/`](mecontroleng/): **MeControlEng**, ambiente de engenharia com simulador multidomínio estilo LTspice (elétrico/eletrônico, mecânico, térmico, fluídico), bancada 3D, controle (modelagem, estabilidade, frequência) e CLP Ladder. Abra `mecontroleng/index.html` no navegador.

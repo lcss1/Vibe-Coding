@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MecSPICE</title>
+<title>MeControlEng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Share+Tech+Mono&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -16,7 +16,7 @@
       <circle cx="11" cy="11" r="9.5" stroke="#ff9f1c" stroke-width="1.4" stroke-dasharray="3 2"/>
       <path d="M3 11h4l2-5 3 10 2-5h5" stroke="#4fb3ff" stroke-width="1.6" fill="none"/>
     </svg>
-    MEC<span>SPICE</span>
+    <span class="lt">MeControl<span>Eng</span></span>
   </div>
   <div id="doc-title" class="sim-only" contenteditable="true" spellcheck="false" title="Título do esquemático (clique para editar)">Sem título</div>
 
@@ -57,9 +57,9 @@
 
 <nav id="tabs">
   <button data-tab="sim" class="on"><span class="ti">⚡</span> Simulação</button>
-  <button data-tab="model"><span class="ti">ƒ</span> Modelagem matemática</button>
-  <button data-tab="stab"><span class="ti">⚖</span> Estabilidade</button>
-  <button data-tab="freq"><span class="ti">∿</span> Frequência</button>
+  <button data-tab="ctrl"><span class="ti">◎</span> Controle e Automação</button>
+  <button data-tab="mec"><span class="ti">⚙</span> Mecânica</button>
+  <button data-tab="ele"><span class="ti">⌁</span> Elétrica</button>
   <span class="tabs-hint" id="tabs-hint">Esquemático multidomínio com simulação no tempo e bancada 3D</span>
 </nav>
 
@@ -91,6 +91,10 @@
             <option value="0.5">0,5×</option>
             <option value="1">1×</option>
             <option value="2">2×</option>
+            <option value="5">5×</option>
+            <option value="20">20×</option>
+            <option value="50">50×</option>
+            <option value="100">100×</option>
           </select>
           <input type="range" id="tslider" min="0" max="1000" value="0">
           <span id="tlabel">t = 0 s</span>
@@ -137,9 +141,28 @@
   </aside>
 </main>
 
-<section class="tabview" id="tab-model"></section>
-<section class="tabview" id="tab-stab"></section>
-<section class="tabview" id="tab-freq"></section>
+<section class="tabview" id="tab-ctrl" data-sub="model">
+  <nav id="subtabs">
+    <button data-sub="model" class="on">ƒ Modelagem matemática</button>
+    <button data-sub="stab">⚖ Estabilidade</button>
+    <button data-sub="freq">∿ Frequência</button>
+    <button data-sub="plc">▤ CLP</button>
+  </nav>
+  <div class="subview" id="tab-model"></div>
+  <div class="subview" id="tab-stab"></div>
+  <div class="subview" id="tab-freq"></div>
+  <div class="subview" id="tab-plc"></div>
+</section>
+<section class="tabview placeholder" id="tab-mec">
+  <div class="ph-card"><div class="ph-icon">⚙</div><h2>Mecânica</h2>
+    <p>Espaço reservado para as ferramentas de engenharia mecânica. As sub-abas serão definidas nas próximas etapas.</p>
+    <p class="muted small">Enquanto isso, os componentes mecânicos (massas, molas, engrenagens, cilindros…) estão na aba <b>Simulação</b>.</p></div>
+</section>
+<section class="tabview placeholder" id="tab-ele">
+  <div class="ph-card"><div class="ph-icon">⌁</div><h2>Elétrica</h2>
+    <p>Espaço reservado para as ferramentas de engenharia elétrica. As sub-abas serão definidas nas próximas etapas.</p>
+    <p class="muted small">Enquanto isso, os componentes elétricos e eletrônicos estão na aba <b>Simulação</b>.</p></div>
+</section>
 
 <div id="ctxmenu"></div>
 <div id="modal">
@@ -151,6 +174,9 @@
 
 <script src="vendor/three.min.js"></script>
 <script src="js/core.js"></script>
+<script src="js/parts/devices.js"></script>
+<script src="js/parts/electronics.js"></script>
+<script src="js/parts/thermofluid.js"></script>
 <script src="js/solver.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/plot.js"></script>
@@ -165,6 +191,7 @@
 <script src="js/ctrl/tab-model.js"></script>
 <script src="js/ctrl/tab-stab.js"></script>
 <script src="js/ctrl/tab-freq.js"></script>
+<script src="js/ctrl/plc.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

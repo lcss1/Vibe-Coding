@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Do esquemático para a função de transferência
+   MeControlEng — Do esquemático para a função de transferência
    Monta a matriz MNA no domínio de Laplace, A(s)·X(s) = b·U(s),
    avalia det A(s) e Y(s)/U(s) em pontos do círculo |s| = ρ e
    recupera os coeficientes dos polinômios por DFT inversa.
@@ -8,7 +8,7 @@
 
 /* entradas possíveis: fontes independentes */
 MS.CS.schematicInputs = function (doc) {
-  return doc.comps.filter(c => ['VS', 'IS', 'TS', 'WS', 'FS', 'US'].includes(c.type))
+  return doc.comps.filter(c => ['VS', 'IS', 'TS', 'WS', 'FS', 'US', 'TSRC', 'QSRC', 'PSRC', 'FSRC'].includes(c.type))
     .map(c => ({ id: c.id, label: `${c.name} (${MS.DEFS[c.type].name})` }));
 };
 
@@ -18,9 +18,9 @@ MS.CS.schematicOutputs = function (doc) {
   const out = [];
   for (let i = 1; i < nl.nodes.length; i++) {
     const n = nl.nodes[i], D = MS.DOM[n.dom];
-    const sym = n.dom === 'E' ? 'V' : n.dom === 'R' ? 'ω' : 'v';
+    const sym = { E: 'V', R: 'ω', T: 'v', H: 'T', F: 'p' }[n.dom] || 'V';
     out.push({ id: 'n:' + n.name, label: `${sym}(${n.name}) — ${D.across} [${D.au}]` });
-    if (n.dom !== 'E') out.push({ id: 'p:' + n.name, label: `${n.dom === 'R' ? 'θ' : 'x'}(${n.name}) — ${D.pos} [${D.pu}]` });
+    if (n.dom === 'R' || n.dom === 'T') out.push({ id: 'p:' + n.name, label: `${n.dom === 'R' ? 'θ' : 'x'}(${n.name}) — ${D.pos} [${D.pu}]` });
   }
   for (const c of doc.comps) {
     const q = {
@@ -48,6 +48,8 @@ MS.CS.fromSchematic = function (doc, inputId, outputId) {
   // localizamos pelo vínculo nós+tipo
   const inEl = els.find(e => e.cid === inComp.id && (e.t === 'V' || e.t === 'I'));
 
+  if (els.some(e => e.t === 'NL')) notes.push('Dispositivos não lineares (transistores, LEDs, Zener, reguladores, AmpOp…) linearizados em torno de 0 V (modelo de pequenos sinais nesse ponto: junções cortadas, AmpOp na região linear).');
+  if (els.some(e => e.t === 'CTRL')) notes.push('Elementos digitais/amostrados (555, portas lógicas, relés, válvulas proporcionais) congelados no estado inicial.');
   if (els.some(e => e.t === 'D')) notes.push('Diodo(s) linearizado(s) no ponto de operação de 0 V (praticamente aberto).');
   if (els.some(e => e.t === 'SW')) notes.push('Chave(s) consideradas no estado em t = 0.');
   if (els.some(e => e.t === 'PID')) notes.push('PID tratado como C(s) = Kp + Ki/s + Kd·s, sem saturação (modelo linear).');
@@ -102,6 +104,18 @@ MS.CS.fromSchematic = function (doc, inputId, outputId) {
           add(e.p - 1, e.k, re(1)); add(e.m - 1, e.k, re(-1)); add(e.s - 1, e.k, re(-e.K));
           add(e.k, e.p - 1, re(1)); add(e.k, e.m - 1, re(-1)); add(e.k, e.s - 1, re(-e.K));
           add(e.k, e.k, cx.add(re(-e.Ra), cx.scale(s, -e.La))); break;
+        case 'GY': for (const [r, c2, v] of e.ent) add(r - 1, c2 - 1, re(v)); break;
+        case 'NL': {
+          const lin = e._lin || (e._lin = e.ev(e.nodes.map(() => 0), false));
+          e.nodes.forEach((rn, k) => e.nodes.forEach((cn, j) => { if (lin.G[k][j]) add(rn - 1, cn - 1, re(lin.G[k][j])); }));
+          break;
+        }
+        case 'XFMR': {
+          add(e.p1 - 1, e.k1, re(1)); add(e.p2 - 1, e.k1, re(-1)); add(e.s1 - 1, e.k2, re(1)); add(e.s2 - 1, e.k2, re(-1));
+          add(e.k1, e.p1 - 1, re(1)); add(e.k1, e.p2 - 1, re(-1)); add(e.k2, e.s1 - 1, re(1)); add(e.k2, e.s2 - 1, re(-1));
+          add(e.k1, e.k1, cx.add(re(-e.R1), cx.scale(s, -e.L1))); add(e.k1, e.k2, cx.scale(s, -e.M));
+          add(e.k2, e.k2, cx.add(re(-e.R2), cx.scale(s, -e.L2))); add(e.k2, e.k1, cx.scale(s, -e.M)); break;
+        }
         case 'XF': add(e.a - 1, e.k, re(1)); add(e.b - 1, e.k, re(-e.N)); add(e.k, e.a - 1, re(1)); add(e.k, e.b - 1, re(-e.N)); break;
         case 'E': add(e.o - 1, e.k, re(1)); add(e.k, e.o - 1, re(1)); add(e.k, e.s - 1, re(-e.K)); break;
         case 'PID': {
@@ -154,7 +168,7 @@ MS.CS.fromSchematic = function (doc, inputId, outputId) {
   };
   const expand = xr => { const x = Array.from({ length: N }, () => cx.c(0)); keep.forEach((i, k) => { x[i] = xr[k]; }); return x; };
 
-  const nDyn = els.filter(e => ['C', 'L', 'EMC'].includes(e.t)).length + 2 * els.filter(e => e.t === 'PID').length;
+  const nDyn = els.filter(e => ['C', 'L', 'EMC'].includes(e.t)).length + 2 * els.filter(e => e.t === 'XFMR').length + 2 * els.filter(e => e.t === 'PID').length;
   const M = Math.max(16, 1 << Math.ceil(Math.log2(nDyn + 4)));
   const interp = rho => {
     const dv = [], nv = [];
@@ -174,6 +188,8 @@ MS.CS.fromSchematic = function (doc, inputId, outputId) {
       }
       return c;
     };
+    const ratio = Math.max(...nv.map((v, j) => cx.abs(v) / Math.max(1e-300, cx.abs(dv[j]))));
+    if (ratio < 1e-10) return { den: [1], num: [0], zero: true };
     const cut = (c) => { const sc = c.map((v, k) => Math.abs(v) * Math.pow(rho, k)); const mx = Math.max(...sc); return c.map((v, k) => (sc[k] < 1e-9 * mx ? 0 : v)); };
     return { den: P.trim(cut(idft(dv))), num: P.trim(cut(idft(nv))) };
   };
@@ -184,6 +200,7 @@ MS.CS.fromSchematic = function (doc, inputId, outputId) {
     const rho = Math.exp(pr.reduce((s, v) => s + Math.log(v), 0) / pr.length);
     if (rho > 0 && isFinite(rho) && Math.abs(Math.log10(rho)) > 0.3) r1 = interp(rho);
   }
+  if (r1.zero) { notes.unshift('A saída não depende da entrada no modelo linearizado (G(s) = 0).'); return { G: { num: [0], den: [1] }, notes }; }
   let G = CS.rat.make(r1.num, r1.den);
   if (extraS) G = CS.rat.make(G.num, P.mul(G.den, [0, 1]));
   // polos/zeros ~ 0 vindos de GMIN viram exatamente 0; cancela pares coincidentes

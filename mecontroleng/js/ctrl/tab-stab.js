@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Aba "Análise de estabilidade"
+   MeControlEng — Aba "Análise de estabilidade"
    Critério de Routh-Hurwitz · Lugar das raízes
    ============================================================ */
 'use strict';

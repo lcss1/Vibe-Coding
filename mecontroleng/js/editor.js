@@ -1,5 +1,5 @@
 /* ============================================================
-   MecSPICE — Editor de esquemático (canvas 2D)
+   MeControlEng — Editor de esquemático (canvas 2D)
    ============================================================ */
 'use strict';
 
@@ -396,7 +396,7 @@ MS.Editor = class {
     g.restore();
     if (node) {
       g.font = '11px "Share Tech Mono", monospace';
-      const sym = node.dom === 'E' ? 'V' : node.dom === 'R' ? 'ω' : 'v';
+      const sym = { E: 'V', R: 'ω', T: 'v', H: 'T', F: 'p' }[node.dom] || 'V';
       const t = `${sym}(${node.name})`;
       g.fillStyle = 'rgba(0,0,0,0.75)'; g.fillRect(x + 12, y - 22, g.measureText(t).width + 8, 16);
       g.fillStyle = c; g.fillText(t, x + 16, y - 10);
@@ -415,6 +415,8 @@ MS.Editor = class {
     const base = selColor || css.getPropertyValue('--sym').trim();
     g.strokeStyle = base; g.fillStyle = base;
     const S = {
+      q: k => (sim ? this.app.liveVal(c.id, k) : null),
+      sel: !!selColor,
       text: (t, x, y, size = 0.8, align = 'center') => {
         g.save(); g.translate(x, y); g.rotate(-c.rot * Math.PI / 2);
         g.fillStyle = selColor || domc; g.font = `${size}px Barlow, sans-serif`;
@@ -422,6 +424,7 @@ MS.Editor = class {
       },
     };
     d.draw(g, c, S);
+    if (d.live && sim) { g.save(); d.live(g, c, S); g.restore(); }
     // marca de domínio nos pinos
     for (const p of d.pins) { g.fillStyle = (MS.DOM[p[2]] || MS.DOM.A).color; g.beginPath(); g.arc(p[0], p[1], 0.11, 0, Math.PI * 2); g.fill(); }
     g.restore();
