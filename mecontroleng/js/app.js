@@ -448,11 +448,11 @@ MS.App = class {
 
   /* ───── abas ───── */
   setTab(id) {
-    if (!['sim', 'ctrl', 'mec', 'ele'].includes(id)) id = 'sim';
+    if (!['home', 'sim', 'ctrl', 'mec', 'ele'].includes(id)) id = 'home';
     this.tab = id;
     document.body.dataset.tab = id;
     document.querySelectorAll('#tabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
-    const hints = { sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', ctrl: 'Modelagem, estabilidade, frequência e CLP', mec: 'Materiais e projetos · fluidos e sistemas térmicos · fabricação e gestão', ele: 'Instalações · sistemas embarcados · eletrônica de potência · telecomunicações' };
+    const hints = { home: 'Visão geral dos módulos e ferramentas', sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', ctrl: 'Modelagem, estabilidade, frequência e CLP', mec: 'Materiais e projetos · fluidos e sistemas térmicos · fabricação e gestão', ele: 'Instalações · sistemas embarcados · eletrônica de potência · telecomunicações' };
     $('#tabs-hint').textContent = hints[id] || '';
     if (id === 'sim') requestAnimationFrame(() => this.layout());
     const nav = document.querySelector(`#tab-${id} .subtabs`);
@@ -529,14 +529,17 @@ class Player {
 MS.HELP_HTML = `
 <h3>O que é</h3>
 <p>O <b>MeControlEng</b> é um ambiente de engenharia com um simulador multidomínio no estilo LTspice. Numa única matriz MNA ele trata os domínios <b style="color:#4fb3ff">elétrico</b>, <b style="color:#ff9f1c">rotacional</b>, <b style="color:#3ddc84">translacional</b>, <b style="color:#ff6b6b">térmico</b> e <b style="color:#2dd4bf">fluídico</b>, acoplados por motores, engrenagens, bombas, cilindros, aquecedores e sensores. Os resultados aparecem em gráficos e numa bancada <b>3D animada</b>.</p>
-<h3>Abas</h3>
+<h3>Navegação</h3>
+<p>A <b>barra lateral</b> à esquerda troca entre os módulos (Início, Simulação, Controle, Mecânica e Elétrica). Dentro de cada módulo, as <b>áreas</b> ficam nas abas do topo e as <b>ferramentas</b> na lista numerada à esquerda (recolhível pelo ícone ao lado do título). A <b>barra de status</b> mostra onde você está.</p>
+<p><kbd>Ctrl</kbd> + <kbd>K</kbd> abre a <b>busca global</b>: digite parte do nome de uma ferramenta, área, exemplo, componente ou comando e tecle Enter. Os menus <b>Arquivo, Editar, Exibir, Simulação e Ajuda</b> reúnem todas as ações; <b>Ajuda › Atalhos de teclado</b> lista os atalhos. Passe o mouse num gráfico para exportá-lo em PNG.</p>
+<h3>Módulos</h3>
 <table>
-<tr><td><b>⚡ Simulação</b></td><td>esquemático, simulação no tempo, gráficos e bancada 3D (aba principal)</td></tr>
-<tr><td><b>◎ Controle e Automação</b></td><td><b>Modelagem matemática</b> (G(s), Laplace, blocos ↔ fluxo de sinal, espaço de estados, G(s) do esquemático) · <b>Estabilidade</b> (Routh-Hurwitz, lugar das raízes) · <b>Frequência</b> (resposta em frequência, Bode, Nyquist) · <b>CLP</b> (Ladder com simulação e plantas virtuais)</td></tr>
-<tr><td><b>⚙ Mecânica</b></td><td><b>Materiais e Projetos</b> (resistência dos materiais, vibrações, elementos de máquinas, seleção de materiais) · <b>Fluidos e Sistemas Térmicos</b> (termodinâmica, mecânica dos fluidos, transferência de calor) · <b>Fabricação, Controle e Gestão Industrial</b> (usinagem, metrologia, manutenção)</td></tr>
-<tr><td><b>⌁ Elétrica</b></td><td>Instalações Elétricas (NBR 5410, proteção, projeto, motores, FV), Sistemas Embarcados (simulador Arduino), Eletrônica de Potência e Alta Tensão, Telecomunicações</td></tr>
+<tr><td><b>Simulação</b></td><td>esquemático, simulação no tempo, gráficos e bancada 3D (aba principal)</td></tr>
+<tr><td><b>Controle e Automação</b></td><td><b>Modelagem matemática</b> (G(s), Laplace, blocos ↔ fluxo de sinal, espaço de estados, G(s) do esquemático) · <b>Estabilidade</b> (Routh-Hurwitz, lugar das raízes) · <b>Frequência</b> (resposta em frequência, Bode, Nyquist) · <b>CLP</b> (Ladder com simulação e plantas virtuais)</td></tr>
+<tr><td><b>Mecânica</b></td><td><b>Materiais e Projetos</b> (resistência dos materiais, vibrações, elementos de máquinas, seleção de materiais) · <b>Fluidos e Sistemas Térmicos</b> (termodinâmica, mecânica dos fluidos, transferência de calor) · <b>Fabricação, Controle e Gestão Industrial</b> (usinagem, metrologia, manutenção)</td></tr>
+<tr><td><b>Elétrica</b></td><td>Instalações Elétricas (NBR 5410, proteção, projeto, motores, FV), Sistemas Embarcados (simulador Arduino), Eletrônica de Potência e Alta Tensão, Telecomunicações</td></tr>
 </table>
-<p>O botão <b>📘 Entenda</b> abre a teoria resumida de cada ferramenta, e <b>📘 Sobre o componente</b> (nas propriedades) explica cada peça do esquemático.</p>
+<p>O botão <b>Entenda</b> abre a teoria resumida de cada ferramenta, e <b>📘 Sobre o componente</b> (nas propriedades) explica cada peça do esquemático.</p>
 <h3>Analogia usada (força-corrente / mobilidade)</h3>
 <table>
 <tr><th></th><th>Elétrico</th><th>Rotacional</th><th>Translacional</th><th>Térmico</th><th>Fluídico</th></tr>
@@ -582,6 +585,6 @@ MS.PLOT_HELP = `
 
 window.addEventListener('DOMContentLoaded', () => {
   window.app = new MS.App();
-  let t = 'sim'; try { t = localStorage.getItem('mecontroleng.tab') || 'sim'; window.app.subs = JSON.parse(localStorage.getItem('mecontroleng.subs') || '{}'); } catch (e) { /* */ }
+  let t = 'home'; try { t = localStorage.getItem('mecontroleng.tab') || 'home'; window.app.subs = JSON.parse(localStorage.getItem('mecontroleng.subs') || '{}'); } catch (e) { /* */ }
   window.app.setTab(t);
 });

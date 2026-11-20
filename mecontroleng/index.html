@@ -5,41 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MeControlEng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Share+Tech+Mono&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Share+Tech+Mono&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-tab="sim">
+<body data-tab="home">
 
 <header id="topbar">
-  <div class="logo">
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="11" r="9.5" stroke="#ff9f1c" stroke-width="1.4" stroke-dasharray="3 2"/>
-      <path d="M3 11h4l2-5 3 10 2-5h5" stroke="#4fb3ff" stroke-width="1.6" fill="none"/>
+  <div class="brand" title="MeControlEng — engenharia multidomínio">
+    <svg class="brand-mark" width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <rect x="1" y="1" width="24" height="24" rx="6" fill="#0f1a28" stroke="#2d4a6b"/>
+      <path d="M5 15.5h3.2l1.9-6 2.9 9.5 2.2-7 1.5 3.5H21" stroke="#3fb5ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="21" cy="15.5" r="1.6" fill="#ffab40"/>
     </svg>
     <span class="lt">MeControl<span>Eng</span></span>
+    <span class="ver">2.0</span>
   </div>
+  <nav id="menubar" aria-label="Menu principal"></nav>
+  <div class="tb-sep sim-only"></div>
   <div id="doc-title" class="sim-only" contenteditable="true" spellcheck="false" title="Título do esquemático (clique para editar)">Sem título</div>
+  <div class="tb-spacer"></div>
+  <button id="btn-cmd" class="cmd-trigger" title="Buscar ferramentas e comandos (Ctrl+K)"><span data-icon="search"></span><span class="ct-txt">Buscar ferramentas, exemplos e comandos…</span><kbd>Ctrl K</kbd></button>
+  <div class="tb-group right">
+    <button class="btn icon ghost" id="btn-help" title="Ajuda (F1)" data-icon="help"></button>
+  </div>
+</header>
 
-  <div class="tb-group sim-only">
-    <button class="btn" id="btn-new" title="Novo esquemático">Novo</button>
-    <button class="btn" id="btn-open" title="Abrir (Ctrl+O)">Abrir</button>
-    <button class="btn" id="btn-save" title="Salvar (Ctrl+S)">Salvar</button>
-    <button class="btn accent" id="btn-ex">Exemplos</button>
+<div id="shell">
+<nav id="tabs" class="nrail" aria-label="Módulos">
+  <button data-tab="home"><span class="ri" data-icon="home"></span><span class="rl">Início</span></button>
+  <button data-tab="sim" class="on"><span class="ri" data-icon="circuit"></span><span class="rl">Simulação</span></button>
+  <button data-tab="ctrl"><span class="ri" data-icon="control"></span><span class="rl">Controle</span></button>
+  <button data-tab="mec"><span class="ri" data-icon="gear"></span><span class="rl">Mecânica</span></button>
+  <button data-tab="ele"><span class="ri" data-icon="bolt"></span><span class="rl">Elétrica</span></button>
+  <div class="nrail-spacer"></div>
+  <span class="tabs-hint" id="tabs-hint" hidden></span>
+</nav>
+
+<div id="stage">
+<div id="simbar" class="toolbar sim-only">
+  <div class="tb-group">
+    <button class="btn icon ghost" id="btn-new" title="Novo esquemático" data-icon="file"></button>
+    <button class="btn icon ghost" id="btn-open" title="Abrir (Ctrl+O)" data-icon="folder"></button>
+    <button class="btn icon ghost" id="btn-save" title="Salvar (Ctrl+S)" data-icon="save"></button>
+    <button class="btn accent" id="btn-ex" title="Galeria de exemplos"><span data-icon="grid"></span>Exemplos</button>
     <input type="file" id="file" accept=".json,application/json" hidden>
   </div>
-  <div class="tb-group sim-only">
-    <button class="btn icon" id="btn-undo" title="Desfazer (Ctrl+Z)">↶</button>
-    <button class="btn icon" id="btn-redo" title="Refazer (Ctrl+Y)">↷</button>
-    <button class="btn icon on" data-mode="select" title="Selecionar (Esc)">⬚</button>
-    <button class="btn icon" data-mode="wire" title="Fio (W)">╱</button>
-    <button class="btn icon" data-mode="probe" title="Ponta de prova (P)">⌖</button>
-    <button class="btn icon" id="btn-rot" title="Girar (R)">⟳</button>
-    <button class="btn icon" id="btn-del" title="Excluir (Del)">✕</button>
-    <button class="btn icon" id="btn-fit" title="Enquadrar (F)">⤢</button>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <button class="btn icon ghost" id="btn-undo" title="Desfazer (Ctrl+Z)" data-icon="undo"></button>
+    <button class="btn icon ghost" id="btn-redo" title="Refazer (Ctrl+Y)" data-icon="redo"></button>
   </div>
-  <div class="tb-group sim sim-only">
-    <label>t<sub>stop</sub> <input id="tstop" value="1" size="5"></label>
-    <label>passo <input id="dt" value="1m" size="5"></label>
+  <div class="tb-sep"></div>
+  <div class="tb-group seg-tools" role="group" aria-label="Modo de edição">
+    <button class="btn icon ghost on" data-mode="select" title="Selecionar (Esc)" data-icon="pointer"></button>
+    <button class="btn icon ghost" data-mode="wire" title="Fio (W)" data-icon="wire"></button>
+    <button class="btn icon ghost" data-mode="probe" title="Ponta de prova (P)" data-icon="probe"></button>
+  </div>
+  <div class="tb-group">
+    <button class="btn icon ghost" id="btn-rot" title="Girar (R)" data-icon="rotate"></button>
+    <button class="btn icon ghost" id="btn-del" title="Excluir (Del)" data-icon="trash"></button>
+    <button class="btn icon ghost" id="btn-fit" title="Enquadrar (F)" data-icon="fit"></button>
+  </div>
+  <div class="tb-spacer"></div>
+  <div class="tb-group sim">
+    <label title="Tempo final da simulação">t<sub>stop</sub> <input id="tstop" value="1" size="5"></label>
+    <label title="Passo de integração">Δt <input id="dt" value="1m" size="5"></label>
     <select id="method" title="Método de integração">
       <option value="trap">Trapezoidal</option>
       <option value="be">Euler implícito</option>
@@ -47,24 +77,17 @@
     <button class="btn run" id="run" title="Simular (Ctrl+Enter / F9)">▶ Simular</button>
     <span id="sim-status" class="pill">sem resultado</span>
   </div>
-  <div class="tb-group right">
-    <button class="btn sim-only" id="btn-net" title="Ver netlist">Netlist</button>
-    <button class="btn sim-only" id="btn-3d" title="Mostrar/ocultar vista 3D">3D</button>
-    <button class="btn icon" id="btn-help" title="Ajuda">?</button>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <button class="btn ghost" id="btn-net" title="Ver netlist"><span data-icon="list"></span>Netlist</button>
+    <button class="btn ghost" id="btn-3d" title="Mostrar/ocultar a bancada 3D"><span data-icon="cube"></span>3D</button>
   </div>
   <div id="progress-wrap"><div id="progress"></div></div>
-</header>
-
-<nav id="tabs">
-  <button data-tab="sim" class="on"><span class="ti">⚡</span> Simulação</button>
-  <button data-tab="ctrl"><span class="ti">◎</span> Controle e Automação</button>
-  <button data-tab="mec"><span class="ti">⚙</span> Mecânica</button>
-  <button data-tab="ele"><span class="ti">⌁</span> Elétrica</button>
-  <span class="tabs-hint" id="tabs-hint">Esquemático multidomínio com simulação no tempo e bancada 3D</span>
-</nav>
+</div>
 
 <main id="app">
   <aside id="palette">
+    <div class="panel-head"><span data-icon="layers"></span>Componentes</div>
     <input id="pal-search" placeholder="Buscar componente…" spellcheck="false">
     <div id="palette-list"></div>
   </aside>
@@ -79,7 +102,7 @@
       <div id="split-v" class="splitter v"></div>
       <div id="v3d-pane">
         <div class="pane-head">
-          <span class="pane-title">Bancada 3D</span>
+          <span class="pane-title"><span data-icon="cube"></span>Bancada 3D</span>
           <button class="btn icon sm" id="rew" title="Início">⏮</button>
           <button class="btn icon sm" id="play" title="Play/Pausa (Espaço)">▶</button>
           <select id="speed" title="Velocidade de reprodução (tempo simulado por segundo real)">
@@ -110,7 +133,7 @@
     <div id="split-h" class="splitter h"></div>
     <div id="plot-pane">
       <div class="pane-head">
-        <span class="pane-title">Formas de onda</span>
+        <span class="pane-title"><span data-icon="wave"></span>Formas de onda</span>
         <select id="units" title="Unidades rotacionais">
           <option value="si">SI (rad, rad/s)</option>
           <option value="prat">Prático (°, RPM)</option>
@@ -126,27 +149,29 @@
 
   <aside id="side">
     <div class="side-sec">
-      <div class="sec-title">Propriedades</div>
+      <div class="sec-title"><span data-icon="sliders"></span>Propriedades</div>
       <div id="props"></div>
     </div>
     <div class="side-sec grow">
-      <div class="sec-title">Sinais</div>
+      <div class="sec-title"><span data-icon="wave"></span>Sinais</div>
       <input id="sig-search" placeholder="Filtrar sinais…" spellcheck="false">
       <div id="signals"><div class="muted">Simule para listar os sinais.</div></div>
     </div>
     <div class="side-sec">
-      <div class="sec-title">Mensagens</div>
+      <div class="sec-title"><span data-icon="terminal"></span>Mensagens</div>
       <div id="log"></div>
     </div>
   </aside>
 </main>
 
+<section class="tabview" id="tab-home"></section>
 <section class="tabview has-sub" id="tab-ctrl">
   <nav class="subtabs">
-    <button data-sub="model" class="on">ƒ Modelagem matemática</button>
-    <button data-sub="stab">⚖ Estabilidade</button>
-    <button data-sub="freq">∿ Frequência</button>
-    <button data-sub="plc">▤ CLP</button>
+    <div class="mod-title"><span class="mod-ic" data-icon="control"></span><div><b>Controle e Automação</b><small>Modelagem, estabilidade, frequência e CLP</small></div></div>
+    <button data-sub="model" class="on" data-icon="fx">Modelagem matemática</button>
+    <button data-sub="stab" data-icon="stability">Estabilidade</button>
+    <button data-sub="freq" data-icon="bode">Frequência</button>
+    <button data-sub="plc" data-icon="ladder">CLP</button>
   </nav>
   <div class="subview" id="tab-model"></div>
   <div class="subview" id="tab-stab"></div>
@@ -155,9 +180,10 @@
 </section>
 <section class="tabview has-sub" id="tab-mec">
   <nav class="subtabs">
-    <button data-sub="mat" class="on">◫ Materiais e Projetos</button>
-    <button data-sub="fts">♨ Fluidos e Sistemas Térmicos</button>
-    <button data-sub="fab">⚒ Fabricação, Controle e Gestão Industrial</button>
+    <div class="mod-title"><span class="mod-ic" data-icon="gear"></span><div><b>Mecânica</b><small>Projeto, térmica, fluidos e fabricação</small></div></div>
+    <button data-sub="mat" class="on" data-icon="beam">Materiais e Projetos</button>
+    <button data-sub="fts" data-icon="flame">Fluidos e Sistemas Térmicos</button>
+    <button data-sub="fab" data-icon="factory">Fabricação, Controle e Gestão</button>
   </nav>
   <div class="subview" id="tab-mat"></div>
   <div class="subview" id="tab-fts"></div>
@@ -165,10 +191,11 @@
 </section>
 <section class="tabview has-sub" id="tab-ele">
   <nav class="subtabs">
-    <button data-sub="inst" class="on">⌂ Instalações Elétricas</button>
-    <button data-sub="emb">▣ Sistemas Embarcados</button>
-    <button data-sub="pot">ϟ Eletrônica de Potência</button>
-    <button data-sub="tel">📡 Telecomunicações</button>
+    <div class="mod-title"><span class="mod-ic" data-icon="bolt"></span><div><b>Elétrica</b><small>Instalações, embarcados, potência e telecom</small></div></div>
+    <button data-sub="inst" class="on" data-icon="plug">Instalações Elétricas</button>
+    <button data-sub="emb" data-icon="chip">Sistemas Embarcados</button>
+    <button data-sub="pot" data-icon="power">Eletrônica de Potência</button>
+    <button data-sub="tel" data-icon="antenna">Telecomunicações</button>
   </nav>
   <div class="subview" id="tab-inst"></div>
   <div class="subview" id="tab-emb"></div>
@@ -176,10 +203,23 @@
   <div class="subview" id="tab-tel"></div>
 </section>
 
+</div><!-- /stage -->
+</div><!-- /shell -->
+
+<footer id="statusbar">
+  <span id="sb-crumb" class="sb-crumb"></span>
+  <span class="tb-spacer"></span>
+  <span id="sb-info" class="sb-item"></span>
+  <span class="sb-item"><kbd>Ctrl K</kbd> buscar</span>
+  <span class="sb-item"><kbd>F1</kbd> ajuda</span>
+  <span class="sb-item sb-brand">MeControlEng 2.0</span>
+</footer>
+
+<div id="cmdk" hidden></div>
 <div id="ctxmenu"></div>
 <div id="modal">
   <div class="modal-box">
-    <div class="modal-head"><span id="modal-title"></span><button class="btn icon" onclick="app.closeModal()">✕</button></div>
+    <div class="modal-head"><span id="modal-title"></span><button class="btn icon ghost" onclick="app.closeModal()" title="Fechar (Esc)">✕</button></div>
     <div id="modal-body"></div>
   </div>
 </div>
@@ -213,5 +253,6 @@
 <script src="js/elec/potencia.js"></script>
 <script src="js/elec/telecom.js"></script>
 <script src="js/app.js"></script>
+<script src="js/shell.js"></script>
 </body>
 </html>

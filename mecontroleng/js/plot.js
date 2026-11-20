@@ -123,10 +123,10 @@ MS.Plot = class {
     this.ML = 64; this.MR = 14;
     const MB = 22;
     this.legendHits = [];
-    g.font = '12px Barlow, sans-serif';
+    g.font = '12px Inter, Barlow, sans-serif';
     if (!this.res || !this.traces.length) {
       g.fillStyle = col('--txt3'); g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.font = '13px Barlow, sans-serif';
+      g.font = '13px Inter, Barlow, sans-serif';
       g.fillText(this.res ? 'Clique em um fio/nó do esquemático (ponta de prova) para plotar. Shift+clique: posição/ângulo. Clique num componente: corrente/força/torque.'
         : 'Execute a simulação (▶ ou Ctrl+Enter) para ver as formas de onda.', this.W / 2, this.H / 2);
       return;
@@ -153,13 +153,13 @@ MS.Plot = class {
       g.strokeStyle = col('--plot-frame'); g.lineWidth = 1;
       g.strokeRect(this.ML + 0.5, top + 0.5, pw, bh);
       const yt = niceTicks(mn, mx, Math.max(2, Math.floor(bh / 34)));
-      g.font = '10px "Share Tech Mono", monospace'; g.textAlign = 'right'; g.textBaseline = 'middle';
+      g.font = '10px "JetBrains Mono", "Share Tech Mono", monospace'; g.textAlign = 'right'; g.textBaseline = 'middle';
       for (const t of yt) {
         const y = Math.round(ty(t)) + 0.5;
         g.strokeStyle = col('--plot-grid'); g.beginPath(); g.moveTo(this.ML, y); g.lineTo(this.ML + pw, y); g.stroke();
         g.fillStyle = col('--txt2'); g.fillText(MS.fmt(t, '', 3).trim(), this.ML - 5, y);
       }
-      g.save(); g.translate(12, top + bh / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillStyle = col('--txt2'); g.font = '11px Barlow, sans-serif'; g.fillText(pane.u || '—', 0, 0); g.restore();
+      g.save(); g.translate(12, top + bh / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillStyle = col('--txt2'); g.font = '11px Inter, Barlow, sans-serif'; g.fillText(pane.u || '—', 0, 0); g.restore();
       if (mn < 0 && mx > 0) { g.strokeStyle = col('--plot-zero'); g.setLineDash([3, 3]); g.beginPath(); g.moveTo(this.ML, ty(0)); g.lineTo(this.ML + pw, ty(0)); g.stroke(); g.setLineDash([]); }
       const xt = niceTicks(v.t0, v.t1, Math.max(2, Math.floor(pw / 90)));
       for (const t of xt) { const x = Math.round(this.tToX(t)) + 0.5; g.strokeStyle = col('--plot-grid'); g.beginPath(); g.moveTo(x, top); g.lineTo(x, top + bh); g.stroke(); }
@@ -196,7 +196,7 @@ MS.Plot = class {
 
       // legenda
       let lx = this.ML + 4;
-      g.textAlign = 'left'; g.textBaseline = 'middle'; g.font = '12px Barlow, sans-serif';
+      g.textAlign = 'left'; g.textBaseline = 'middle'; g.font = '12px Inter, Barlow, sans-serif';
       const tRead = hoverT !== null ? hoverT : this.cursorT;
       for (const it of pane.items) {
         let txt = it.s.label;
@@ -208,12 +208,12 @@ MS.Plot = class {
         lx += w;
       }
       if (pi === panes.length - 1) {
-        g.fillStyle = col('--txt2'); g.textAlign = 'center'; g.textBaseline = 'top'; g.font = '10px "Share Tech Mono", monospace';
+        g.fillStyle = col('--txt2'); g.textAlign = 'center'; g.textBaseline = 'top'; g.font = '10px "JetBrains Mono", "Share Tech Mono", monospace';
         for (const t of xt) g.fillText(MS.fmt(t, 's', 3), this.tToX(t), top + bh + 4);
       }
     });
     if (hoverT !== null) {
-      g.fillStyle = col('--txt'); g.textAlign = 'right'; g.textBaseline = 'top'; g.font = '11px "Share Tech Mono", monospace';
+      g.fillStyle = col('--txt'); g.textAlign = 'right'; g.textBaseline = 'top'; g.font = '11px "JetBrains Mono", "Share Tech Mono", monospace';
       g.fillText('t = ' + MS.fmt(hoverT, 's', 5), this.W - this.MR - 2, 4);
     }
     if (this.drag && Math.abs(this.drag.x1 - this.drag.x0) > 2) {

@@ -19,14 +19,27 @@ Simulador de circuitos **elétricos/eletrônicos, mecânicos (rotacionais e tran
 - **Netlist textual**, salvar/abrir em JSON e salvamento automático no navegador.
 - **21 exemplos**, entre eles: fonte de alimentação completa (transformador + ponte + filtro + 7805), contador 0–9 com 555 + 4026 + display, relé acionado por transistor, PWM com MOSFET, AmpOp inversor, Zener, fotodiodo, aquecimento e controle PID de temperatura, nível de tanque, controle de nível PID com válvula proporcional, cilindro hidráulico e os exemplos originais: controle PI de motor DC, motor em malha aberta, massa-mola-amortecedor, redutor com eixo flexível, pinhão-cremalheira, analogia RLC × massa-mola, RC e retificador.
 
+## Interface (versão 2.0)
+
+![Tela Início](docs/inicio.png)
+
+- **Tela Início** com visão geral dos módulos, contagem de ferramentas, atalhos para as áreas e exemplos.
+- **Barra lateral de módulos** (Início · Simulação · Controle · Mecânica · Elétrica), **abas de área** com ícones e **lista numerada de ferramentas**, recolhível.
+- **Barra de menus** (Arquivo, Editar, Exibir, Simulação, Ajuda) e **busca global `Ctrl+K`**, que encontra qualquer ferramenta, área, exemplo, componente ou comando.
+- **Barra de ferramentas da simulação** separada do topo: arquivo, edição, modos de edição, parâmetros de integração, botão Simular e estado do resultado.
+- **Barra de status** com a trilha de navegação (módulo › área › ferramenta) e informações do contexto.
+- **Design system** próprio: superfícies em grafite azulado, acento azul de sinal, tipografia Inter + JetBrains Mono, ícones vetoriais, cartões com resultados em tabela chave-valor, tabelas com cabeçalho fixo, unidades em etiquetas nos campos.
+- **Gráficos** com legenda em caixa, mira (crosshair) e leitura em balão; exportação em **PNG** pelo botão que aparece ao passar o mouse.
+- Atalhos: `Ctrl+K` busca, `F1` ajuda, `Ctrl+Enter`/`F9` simular, `Ctrl+S`/`Ctrl+O`, `Ctrl+Z`/`Ctrl+Y`, `W`/`P`/`G`/`R`/`F`/`Del`, `Espaço`.
+
 ## Organização das abas
 
 | Aba principal | Conteúdo |
 |---|---|
-| **⚡ Simulação** | esquemático multidomínio, transitório, gráficos, bancada 3D (aba principal) |
-| **◎ Controle e Automação** | sub-abas **Modelagem matemática**, **Estabilidade**, **Frequência** e **CLP** |
-| **⚙ Mecânica** | sub-abas **Materiais e Projetos**, **Fluidos e Sistemas Térmicos** e **Fabricação, Controle e Gestão Industrial** |
-| **⌁ Elétrica** | sub-abas **Instalações Elétricas**, **Sistemas Embarcados**, **Eletrônica de Potência** (com Alta Tensão) e **Telecomunicações** |
+| **Simulação** | esquemático multidomínio, transitório, gráficos, bancada 3D (aba principal) |
+| **Controle e Automação** | sub-abas **Modelagem matemática**, **Estabilidade**, **Frequência** e **CLP** |
+| **Mecânica** | sub-abas **Materiais e Projetos**, **Fluidos e Sistemas Térmicos** e **Fabricação, Controle e Gestão Industrial** |
+| **Elétrica** | sub-abas **Instalações Elétricas**, **Sistemas Embarcados**, **Eletrônica de Potência** (com Alta Tensão) e **Telecomunicações** |
 
 ### Mecânica
 
@@ -137,6 +150,7 @@ mecontroleng/
 ├── js/plot.js          visualizador de formas de onda
 ├── js/view3d.js        bancada 3D (Three.js)
 ├── js/examples.js      exemplos prontos
+├── js/shell.js          interface: ícones, menus, busca Ctrl+K, tela Início, status
 ├── js/app.js           integração da interface, arquivos, reprodução, atalhos, abas
 ├── js/info.js          textos didáticos dos componentes
 ├── js/parts/devices.js     modelos não lineares (junção, BJT, MOSFET, regulador, AmpOp)

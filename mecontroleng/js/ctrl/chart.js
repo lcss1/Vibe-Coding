@@ -118,7 +118,7 @@ MS.Chart = class {
       g.fillStyle = rg.color; g.fillRect(x0, y0, x1 - x0, y1 - y0);
     }
     // grade
-    g.lineWidth = 1; g.font = '10px "Share Tech Mono", monospace';
+    g.lineWidth = 1; g.font = '10.5px "JetBrains Mono", "Share Tech Mono", monospace';
     const xt = this.o.xlog ? logTicks(v.x0, v.x1) : MS.niceTicks(v.x0, v.x1, Math.max(2, Math.floor(PW / 80))).map(t => ({ u: t, major: true }));
     const yt = this.o.ylog ? logTicks(v.y0, v.y1).filter(t => t.major).map(t => this.ify(t.u)) : MS.niceTicks(v.y0, v.y1, Math.max(2, Math.floor(PH / 40)));
     for (const t of xt) { const x = Math.round(L + (t.u - v.x0) / (v.x1 - v.x0) * PW) + 0.5; g.strokeStyle = t.major ? col('--plot-grid') : col('--plot-grid2'); g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + PH); g.stroke(); }
@@ -152,42 +152,46 @@ MS.Chart = class {
       else if (m.shape === 'sq') { g.strokeRect(x - r, y - r, 2 * r, 2 * r); }
       else if (m.shape === 'plus') { g.beginPath(); g.moveTo(x - r, y); g.lineTo(x + r, y); g.moveTo(x, y - r); g.lineTo(x, y + r); g.stroke(); }
       else { g.beginPath(); g.arc(x, y, r * 0.75, 0, Math.PI * 2); g.fill(); }
-      if (m.label) { g.font = '11px Barlow, sans-serif'; g.textAlign = 'left'; g.fillText(m.label, x + r + 3, y - r - 2); }
+      if (m.label) { g.font = '11px Inter, Barlow, sans-serif'; g.textAlign = 'left'; g.fillText(m.label, x + r + 3, y - r - 2); }
     }
-    for (const t of this.data.texts) { g.fillStyle = t.color || col('--txt2'); g.font = (t.size || 11) + 'px Barlow, sans-serif'; g.textAlign = t.align || 'left'; g.fillText(t.text, this.X(t.x) + (t.dx || 0), this.Y(t.y) + (t.dy || 0)); }
+    for (const t of this.data.texts) { g.fillStyle = t.color || col('--txt2'); g.font = (t.size || 11) + 'px Inter, Barlow, sans-serif'; g.textAlign = t.align || 'left'; g.fillText(t.text, this.X(t.x) + (t.dx || 0), this.Y(t.y) + (t.dy || 0)); }
     g.restore();
     // moldura e rótulos
     g.strokeStyle = col('--plot-frame'); g.lineWidth = 1; g.strokeRect(L + 0.5, T + 0.5, PW, PH);
-    g.fillStyle = col('--txt2'); g.font = '10px "Share Tech Mono", monospace';
+    g.fillStyle = col('--txt2'); g.font = '10.5px "JetBrains Mono", "Share Tech Mono", monospace';
     g.textAlign = 'center'; g.textBaseline = 'top';
     let lastX = -1e9;
     for (const t of xt) if (t.major) { const x = L + (t.u - v.x0) / (v.x1 - v.x0) * PW; if (x - lastX < 34) continue; lastX = x; g.fillText(this.o.xlog ? fmtLog(t.u) : MS.CS.fmtNum(t.u, 3), x, T + PH + 4); }
     g.textAlign = 'right'; g.textBaseline = 'middle';
     for (const t of yt) g.fillText(this.o.ylog ? fmtLog(Math.log10(t)) : MS.CS.fmtNum(t, 3), L - 5, this.Y(t));
     g.textBaseline = 'alphabetic';
-    if (this.o.xlabel) { g.textAlign = 'right'; g.fillStyle = col('--txt3'); g.font = '11px Barlow, sans-serif'; g.fillText(this.o.xlabel, L + PW - 2, T + PH - 4); }
-    if (this.o.ylabel) { g.save(); g.translate(12, T + PH / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillStyle = col('--txt2'); g.font = '11px Barlow, sans-serif'; g.fillText(this.o.ylabel, 0, 0); g.restore(); }
+    if (this.o.xlabel) { g.textAlign = 'right'; g.fillStyle = col('--txt3'); g.font = '11px Inter, Barlow, sans-serif'; g.fillText(this.o.xlabel, L + PW - 2, T + PH - 4); }
+    if (this.o.ylabel) { g.save(); g.translate(12, T + PH / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillStyle = col('--txt2'); g.font = '11px Inter, Barlow, sans-serif'; g.fillText(this.o.ylabel, 0, 0); g.restore(); }
     // legenda
     const leg = this.data.series.filter(s => s.name);
     if (leg.length) {
-      g.font = '11px Barlow, sans-serif'; g.textAlign = 'left';
-      let lx = L + 8; const ly = T + 12;
-      for (const s of leg) { g.fillStyle = s.color; g.fillRect(lx, ly - 7, 12, 3); g.fillStyle = col('--txt'); g.fillText(s.name, lx + 16, ly - 2); lx += g.measureText(s.name).width + 34; }
+      g.font = '11px Inter, Barlow, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle';
+      const ws = leg.map(s => g.measureText(s.name).width + 30), tw = ws.reduce((a, b) => a + b, 0) + 6;
+      const lx0 = L + 8, ly = T + 15;
+      rrect(g, lx0, ly - 10, Math.min(tw, PW - 16), 20, 5); g.fillStyle = 'rgba(10,14,20,0.82)'; g.fill(); g.strokeStyle = col('--plot-frame'); g.stroke();
+      let lx = lx0 + 8;
+      leg.forEach((s, i) => { g.strokeStyle = s.color; g.lineWidth = 2.2; g.setLineDash(s.dash || []); g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx + 14, ly); g.stroke(); g.setLineDash([]); g.lineWidth = 1; g.fillStyle = col('--txt'); g.fillText(s.name, lx + 19, ly + 0.5); lx += ws[i]; });
+      g.textBaseline = 'alphabetic';
     }
     // cursor
     if (this.hover && this.hover.px > L && this.hover.px < L + PW && this.hover.py > T && this.hover.py < T + PH) {
       g.strokeStyle = col('--txt3'); g.setLineDash([2, 3]);
-      g.beginPath(); g.moveTo(this.hover.px + 0.5, T); g.lineTo(this.hover.px + 0.5, T + PH); g.stroke(); g.setLineDash([]);
+      g.beginPath(); g.moveTo(this.hover.px + 0.5, T); g.lineTo(this.hover.px + 0.5, T + PH); g.moveTo(L, this.hover.py + 0.5); g.lineTo(L + PW, this.hover.py + 0.5); g.stroke(); g.setLineDash([]);
       const txt = this.o.readout ? this.o.readout(this.invX(this.hover.px), this.invY(this.hover.py)) : `${MS.CS.fmtNum(this.invX(this.hover.px))}, ${MS.CS.fmtNum(this.invY(this.hover.py))}`;
       if (txt) {
-        g.font = '11px "Share Tech Mono", monospace';
+        g.font = '11px "JetBrains Mono", "Share Tech Mono", monospace';
         const lines = txt.split('\n'), w = Math.max(...lines.map(l => g.measureText(l).width)) + 10;
         let bx = this.hover.px + 10, by = this.hover.py + 10;
         if (bx + w > L + PW) bx = this.hover.px - w - 10;
         if (by + lines.length * 14 + 6 > T + PH) by = this.hover.py - lines.length * 14 - 16;
-        g.fillStyle = 'rgba(4,7,13,0.88)'; g.fillRect(bx, by, w, lines.length * 14 + 6);
+        rrect(g, bx, by, w + 4, lines.length * 14 + 8, 5); g.fillStyle = 'rgba(16,21,29,0.95)'; g.fill(); g.strokeStyle = col('--border3') || '#364257'; g.stroke();
         g.fillStyle = col('--txt'); g.textAlign = 'left';
-        lines.forEach((l, i) => g.fillText(l, bx + 5, by + 14 + i * 14));
+        lines.forEach((l, i) => g.fillText(l, bx + 7, by + 15 + i * 14));
       }
     }
   }
@@ -205,6 +209,7 @@ MS.Chart = class {
   }
 };
 
+function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 function logTicks(u0, u1) {
   const out = [];
   for (let d = Math.floor(u0); d <= Math.ceil(u1); d++) for (let k = 1; k < 10; k++) {
