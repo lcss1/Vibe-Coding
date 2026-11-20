@@ -452,7 +452,7 @@ MS.App = class {
     this.tab = id;
     document.body.dataset.tab = id;
     document.querySelectorAll('#tabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
-    const hints = { sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', ctrl: 'Modelagem, estabilidade, frequência e CLP', mec: 'Materiais e projetos · fluidos e sistemas térmicos · fabricação e gestão', ele: 'Ferramentas de engenharia elétrica (em construção)' };
+    const hints = { sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', ctrl: 'Modelagem, estabilidade, frequência e CLP', mec: 'Materiais e projetos · fluidos e sistemas térmicos · fabricação e gestão', ele: 'Instalações · sistemas embarcados · eletrônica de potência · telecomunicações' };
     $('#tabs-hint').textContent = hints[id] || '';
     if (id === 'sim') requestAnimationFrame(() => this.layout());
     const nav = document.querySelector(`#tab-${id} .subtabs`);
@@ -534,7 +534,7 @@ MS.HELP_HTML = `
 <tr><td><b>⚡ Simulação</b></td><td>esquemático, simulação no tempo, gráficos e bancada 3D (aba principal)</td></tr>
 <tr><td><b>◎ Controle e Automação</b></td><td><b>Modelagem matemática</b> (G(s), Laplace, blocos ↔ fluxo de sinal, espaço de estados, G(s) do esquemático) · <b>Estabilidade</b> (Routh-Hurwitz, lugar das raízes) · <b>Frequência</b> (resposta em frequência, Bode, Nyquist) · <b>CLP</b> (Ladder com simulação e plantas virtuais)</td></tr>
 <tr><td><b>⚙ Mecânica</b></td><td><b>Materiais e Projetos</b> (resistência dos materiais, vibrações, elementos de máquinas, seleção de materiais) · <b>Fluidos e Sistemas Térmicos</b> (termodinâmica, mecânica dos fluidos, transferência de calor) · <b>Fabricação, Controle e Gestão Industrial</b> (usinagem, metrologia, manutenção)</td></tr>
-<tr><td><b>⌁ Elétrica</b></td><td>reservada para as próximas ferramentas</td></tr>
+<tr><td><b>⌁ Elétrica</b></td><td>Instalações Elétricas (NBR 5410, proteção, projeto, motores, FV), Sistemas Embarcados (simulador Arduino), Eletrônica de Potência e Alta Tensão, Telecomunicações</td></tr>
 </table>
 <p>O botão <b>📘 Entenda</b> abre a teoria resumida de cada ferramenta, e <b>📘 Sobre o componente</b> (nas propriedades) explica cada peça do esquemático.</p>
 <h3>Analogia usada (força-corrente / mobilidade)</h3>

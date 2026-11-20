@@ -163,10 +163,17 @@
   <div class="subview" id="tab-fts"></div>
   <div class="subview" id="tab-fab"></div>
 </section>
-<section class="tabview placeholder" id="tab-ele">
-  <div class="ph-card"><div class="ph-icon">⌁</div><h2>Elétrica</h2>
-    <p>Espaço reservado para as ferramentas de engenharia elétrica. As sub-abas serão definidas nas próximas etapas.</p>
-    <p class="muted small">Enquanto isso, os componentes elétricos e eletrônicos estão na aba <b>Simulação</b>.</p></div>
+<section class="tabview has-sub" id="tab-ele">
+  <nav class="subtabs">
+    <button data-sub="inst" class="on">⌂ Instalações Elétricas</button>
+    <button data-sub="emb">▣ Sistemas Embarcados</button>
+    <button data-sub="pot">ϟ Eletrônica de Potência</button>
+    <button data-sub="tel">📡 Telecomunicações</button>
+  </nav>
+  <div class="subview" id="tab-inst"></div>
+  <div class="subview" id="tab-emb"></div>
+  <div class="subview" id="tab-pot"></div>
+  <div class="subview" id="tab-tel"></div>
 </section>
 
 <div id="ctxmenu"></div>
@@ -201,6 +208,10 @@
 <script src="js/mech/materiais.js"></script>
 <script src="js/mech/termofluidos.js"></script>
 <script src="js/mech/fabricacao.js"></script>
+<script src="js/elec/instalacoes.js"></script>
+<script src="js/elec/embarcados.js"></script>
+<script src="js/elec/potencia.js"></script>
+<script src="js/elec/telecom.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

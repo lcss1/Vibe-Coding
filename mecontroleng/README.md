@@ -26,7 +26,7 @@ Simulador de circuitos **elétricos/eletrônicos, mecânicos (rotacionais e tran
 | **⚡ Simulação** | esquemático multidomínio, transitório, gráficos, bancada 3D (aba principal) |
 | **◎ Controle e Automação** | sub-abas **Modelagem matemática**, **Estabilidade**, **Frequência** e **CLP** |
 | **⚙ Mecânica** | sub-abas **Materiais e Projetos**, **Fluidos e Sistemas Térmicos** e **Fabricação, Controle e Gestão Industrial** |
-| **⌁ Elétrica** | reservada (sub-abas a definir) |
+| **⌁ Elétrica** | sub-abas **Instalações Elétricas**, **Sistemas Embarcados**, **Eletrônica de Potência** (com Alta Tensão) e **Telecomunicações** |
 
 ### Mecânica
 
@@ -42,6 +42,31 @@ Simulador de circuitos **elétricos/eletrônicos, mecânicos (rotacionais e tran
 | Fabricação, Controle e Gestão Industrial | Processos de Fabricação | torneamento, fresamento, furação (n, Vf, Q, kc de Kienzle, Fc, Pc, Ra) · Taylor e velocidade de mínimo custo / máxima produção |
 | | Metrologia e Controle | tolerâncias e ajustes ISO 286 (furo-base) · CEP com cartas X̄-R, Cp/Cpk e histograma · paquímetro virtual com correção |
 | | Manutenção e Gestão | Weibull (R, F, λ, MTTF, B10) e intervalo ótimo de preventiva · MTBF, MTTR, disponibilidade e OEE · Pareto/ABC |
+
+### Elétrica
+
+| Sub-aba | Ferramenta | Seções |
+|---|---|---|
+| Instalações Elétricas | Dimensionamento de condutores | NBR 5410: corrente de projeto, métodos B1/B2/A1/C/D, fatores de temperatura e agrupamento, queda de tensão, seção mínima, disjuntor (IB ≤ In ≤ Iz), neutro e PE |
+| | Normas Técnicas e Segurança | fichas pesquisáveis (NBR 5410, 14039, 5419, 5418 → IEC 60079, 14136, NR-10, 16690, 17019, 8995, 61439, 13534, 15749) · zonas de choque IEC 60479 · distâncias da NR-10 · grau IP |
+| | Dispositivos de Proteção e Aterramento | curvas B/C/D · DR e tensão de contato no TT · esquemas TN-S/TN-C/TN-C-S/TT/IT · hastes e malhas · curto-circuito e Icu · SPDA por esfera rolante |
+| | Projeto, Infraestrutura e Execução | previsão de cargas · quadro de cargas com balanceamento de fases · eletrodutos (taxa de ocupação) · método dos lúmens · ensaios e desenergização NR-10 |
+| | Aplicações Especiais e Tendências | motores (direta, Y-Δ, soft-starter, inversor) · comandos elétricos animados (selo, reversão, estrela-triângulo) · fotovoltaica (I-V, strings, payback) · recarga de veículos elétricos · automação residencial com regras |
+| Sistemas Embarcados | Simulador Arduino | sketches em C/C++ (setup/loop, digital/analog, PWM, millis, Serial, Servo, tone) numa placa virtual com LEDs, botões, potenciômetro, LM35, LDR, servo e buzzer · monitor e plotter serial · 10 exemplos |
+| | Plataformas e pinagens | Arduino, ESP8266/ESP32, Pico, STM32, PIC, Raspberry Pi · pinagem do Uno · arquitetura e boas práticas |
+| | Protocolos de comunicação | diagramas de tempo UART, I²C e SPI para o byte escolhido · comparativo (RS-485, CAN, 1-Wire, USB…) |
+| | Calculadoras de hardware | resistor de LED · divisor e ADC · timer/PWM do ATmega328P (registradores) · transistor como chave · autonomia de bateria |
+| Eletrônica de Potência | Retificadores | meia-onda, ponte mono e trifásica, diodo e SCR (α), Vdc × α, FP, harmônicos e THD |
+| | Conversores CC-CC | buck, boost e buck-boost simulados chave a chave (partida, ripple, MCC/MCD) |
+| | Inversores PWM | onda quadrada, SPWM bipolar/unipolar e trifásico, corrente RL, espectro e THD |
+| | Semicondutores e perdas | comparativo SCR…GaN · mapa potência × frequência · perdas de condução/chaveamento e dissipador |
+| | Alta Tensão | campo coaxial (raio ótimo) · Paschen · corona (Peek) · impulso 1,2/50 µs e gerador de Marx · ondas viajantes (treliça de Bewley) · cadeia de isoladores · coordenação de isolamento · HVDC · equipamentos e ensaios |
+| Telecomunicações | Sinais e amostragem | série de Fourier (Gibbs) · Nyquist e aliasing · quantização (SQNR) |
+| | Modulação analógica | AM, DSB-SC, SSB · FM com raias de Bessel e Carson |
+| | Modulação digital | ASK/FSK/BPSK · constelações com ruído (Monte Carlo) · BER × Eb/N0 |
+| | Enlaces e propagação | orçamento de potência (Friis) · zona de Fresnel e altura de antenas · Shannon · fibra óptica |
+| | Linhas e antenas | Γ, ROE e onda estacionária animada · carta de Smith · cabo coaxial · arranjos de antenas com direcionamento de feixe |
+| | Sistemas e redes | espectro, gerações celulares, Wi-Fi/IoT, modelo OSI |
 
 ### CLP (Ladder)
 
@@ -122,6 +147,10 @@ mecontroleng/
 ├── js/mech/materiais.js   Materiais e Projetos
 ├── js/mech/termofluidos.js Fluidos e Sistemas Térmicos
 ├── js/mech/fabricacao.js  Fabricação, Controle e Gestão Industrial
+├── js/elec/instalacoes.js Instalações Elétricas
+├── js/elec/embarcados.js  Sistemas Embarcados (simulador Arduino)
+├── js/elec/potencia.js    Eletrônica de Potência e Alta Tensão
+├── js/elec/telecom.js     Telecomunicações
 ├── js/ctrl/math.js     polinômios, raízes (Aberth), parser de G(s), frações parciais, espaço de estados, respostas
 ├── js/ctrl/extract.js  esquemático → G(s)
 ├── js/ctrl/chart.js    gráfico genérico (log, zoom, leitura)

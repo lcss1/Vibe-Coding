@@ -96,6 +96,26 @@
   K.solve = (f, a, b, it = 80) => { let fa = f(a); for (let i = 0; i < it; i++) { const m = (a + b) / 2, fm = f(m); if (Math.sign(fm) === Math.sign(fa)) { a = m; fa = fm; } else b = m; } return (a + b) / 2; };
   K.linspace = (a, b, n) => [...Array(n)].map((_, i) => a + (b - a) * i / (n - 1));
 
+  /* FFT radix-2 (re, im in-place); n potência de 2 */
+  K.fft = function (re, im) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) { let b = n >> 1; for (; j & b; b >>= 1) j ^= b; j ^= b; if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; } }
+    for (let len = 2; len <= n; len <<= 1) {
+      const a = -2 * Math.PI / len, wr = Math.cos(a), wi = Math.sin(a);
+      for (let i = 0; i < n; i += len) { let cr = 1, ci = 0; for (let k = 0; k < len / 2; k++) { const ur = re[i + k], ui = im[i + k], vr = re[i + k + len / 2] * cr - im[i + k + len / 2] * ci, vi = re[i + k + len / 2] * ci + im[i + k + len / 2] * cr; re[i + k] = ur + vr; im[i + k] = ui + vi; re[i + k + len / 2] = ur - vr; im[i + k + len / 2] = ui - vi; const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t; } }
+    }
+  };
+  /* espectro de amplitude de um sinal amostrado (frequências positivas) */
+  K.spectrum = function (y, fs) {
+    let n = 1; while (n < y.length) n <<= 1; n = Math.max(n, 2);
+    const re = new Float64Array(n), im = new Float64Array(n); for (let i = 0; i < y.length; i++) re[i] = y[i];
+    K.fft(re, im);
+    const f = [], a = [];
+    for (let k = 0; k <= n / 2; k++) { f.push(k * fs / n); a.push((k === 0 ? 1 : 2) * Math.hypot(re[k], im[k]) / y.length); }
+    return { f, a };
+  };
+  K.dB = x => 10 * Math.log10(x);
+
   /* engrenagem desenhada em canvas */
   K.drawGear = function (g, cx, cy, r, z, ang, fill, stroke) {
     const m = 2 * r / z, ra = r + m, rf = r - 1.25 * m;

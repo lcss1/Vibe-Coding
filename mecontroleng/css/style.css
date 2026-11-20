@@ -187,8 +187,7 @@ body.no3d #v3d-pane, body.no3d #split-v { display: none; }
 .tabview { display: none; flex: 1; min-height: 0; }
 body:not([data-tab="sim"]) #app { display: none; }
 body:not([data-tab="sim"]) .sim-only { display: none !important; }
-body[data-tab="ctrl"] #tab-ctrl, body[data-tab="mec"] #tab-mec { display: flex; flex-direction: column; }
-body[data-tab="ele"] #tab-ele { display: flex; }
+body[data-tab="ctrl"] #tab-ctrl, body[data-tab="mec"] #tab-mec, body[data-tab="ele"] #tab-ele { display: flex; flex-direction: column; }
 .subtabs { flex: 0 0 auto; display: flex; gap: 4px; padding: 6px 12px 0; background: var(--bg0); border-bottom: 1px solid var(--border); }
 .subtabs button { background: var(--bg1); border: 1px solid var(--border); border-bottom: none; border-radius: 5px 5px 0 0; padding: 5px 14px; cursor: pointer; color: var(--txt2); font-size: 12.5px; }
 .subtabs button:hover { color: var(--wht); }
@@ -388,3 +387,23 @@ details.about p { font-size: 12px; line-height: 1.5; margin-top: 5px; color: var
 .dbt th.sortable { cursor: pointer; text-align: right; }
 .dbt th.sortable.on { color: var(--acc); }
 .paq-msg { font-size: 13px; line-height: 1.6; color: var(--txt); min-height: 22px; }
+
+/* ───────── Elétrica ───────── */
+.tbl tr.row-ok td { background: rgba(61,220,132,0.14); }
+.norm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; margin-top: 10px; }
+.card.norm ul { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--txt2); }
+.norm-cod { font-family: 'Share Tech Mono', monospace; color: var(--accent, #4fb3ff); font-size: 15px; }
+.norm-tit { font-weight: 600; margin: 2px 0 4px; }
+.small { font-size: 12px; }
+.chk-item { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+.chk-item input { margin-top: 3px; }
+.ip-code { font-family: 'Share Tech Mono', monospace; font-size: 34px; color: #ffd166; margin: 8px 0; }
+.auto-log { font-family: 'Share Tech Mono', monospace; font-size: 12px; max-height: 190px; overflow: auto; color: var(--txt2); }
+.row.wrap { flex-wrap: wrap; }
+.ard-wrap { display: grid; grid-template-columns: minmax(320px, 1.1fr) minmax(300px, 1fr); gap: 10px; }
+@media (max-width: 900px) { .ard-wrap { grid-template-columns: 1fr; } }
+.ard-code { width: 100%; min-height: 360px; font-family: 'Share Tech Mono', monospace; font-size: 13px; background: #0a1220; color: #d8e6f7; border: 1px solid var(--line, #24344d); border-radius: 6px; padding: 8px; resize: vertical; tab-size: 2; white-space: pre; }
+.ard-serial { font-family: 'Share Tech Mono', monospace; font-size: 12px; background: #050a12; color: #3ddc84; height: 150px; overflow: auto; padding: 6px; border-radius: 6px; white-space: pre-wrap; }
+.ard-ctrls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 6px 0; font-size: 13px; }
+.ard-ctrls input[type=range] { width: 140px; }
+.pin-tbl td:first-child { font-family: 'Share Tech Mono', monospace; }
