@@ -25,8 +25,23 @@ Simulador de circuitos **elétricos/eletrônicos, mecânicos (rotacionais e tran
 |---|---|
 | **⚡ Simulação** | esquemático multidomínio, transitório, gráficos, bancada 3D (aba principal) |
 | **◎ Controle e Automação** | sub-abas **Modelagem matemática**, **Estabilidade**, **Frequência** e **CLP** |
-| **⚙ Mecânica** | reservada (sub-abas a definir) |
+| **⚙ Mecânica** | sub-abas **Materiais e Projetos**, **Fluidos e Sistemas Térmicos** e **Fabricação, Controle e Gestão Industrial** |
 | **⌁ Elétrica** | reservada (sub-abas a definir) |
+
+### Mecânica
+
+| Sub-aba | Ferramenta | Seções |
+|---|---|---|
+| Materiais e Projetos | Resistência dos Materiais | vigas (reações, V, M, σ, τ, flecha com cargas concentradas, distribuídas e momentos; biapoiada, com balanço ou engastada) · círculo de Mohr (σ₁, σ₂, τmáx, von Mises, Tresca, elemento girado) · flambagem (Euler/Johnson) |
+| | Dinâmica e Vibrações | vibração livre com animação · forçada (fator de amplificação, fase, resposta transitória por RK4) · isolamento (transmissibilidade, dimensionamento de coxins) |
+| | Elementos de Máquinas e Projeto Mecânico | eixos (von Mises estático e DE-Goodman) · engrenagens (geometria, esforços, Lewis, animação) · rolamentos (L₁₀, confiabilidade) · parafusos (pré-carga, torque, diagrama da junta) · fadiga (Marin, Goodman, Soderberg, Gerber, Langer) |
+| | Ciência e Seleção de Materiais | banco com 30 materiais · gráfico de Ashby log-log com linhas de índice · ranking por índice de desempenho com restrições · curvas tensão-deformação (resiliência e tenacidade) |
+| Fluidos e Sistemas Térmicos | Termodinâmica | processos com gás ideal (P-v e T-s, W, Q, ΔU, ΔS) · ciclos Otto, Diesel, Brayton e Carnot |
+| | Mecânica dos Fluidos e Fenômenos de Transporte | tubulação com Colebrook e diagrama de Moody · ponto de operação bomba × sistema (série/paralelo) · Venturi com piezômetros |
+| | Transferência de Calor | parede composta plana/cilíndrica (raio crítico) · aletas (η, ε, perfil) · condução transiente 1D por diferenças finitas, animada |
+| Fabricação, Controle e Gestão Industrial | Processos de Fabricação | torneamento, fresamento, furação (n, Vf, Q, kc de Kienzle, Fc, Pc, Ra) · Taylor e velocidade de mínimo custo / máxima produção |
+| | Metrologia e Controle | tolerâncias e ajustes ISO 286 (furo-base) · CEP com cartas X̄-R, Cp/Cpk e histograma · paquímetro virtual com correção |
+| | Manutenção e Gestão | Weibull (R, F, λ, MTTF, B10) e intervalo ótimo de preventiva · MTBF, MTTR, disponibilidade e OEE · Pareto/ABC |
 
 ### CLP (Ladder)
 
@@ -103,6 +118,10 @@ mecontroleng/
 ├── js/parts/electronics.js componentes eletrônicos (símbolo, modelo, visual ao vivo, 3D)
 ├── js/parts/thermofluid.js domínios térmico e fluídico
 ├── js/ctrl/plc.js      CLP: editor Ladder, ciclo de varredura, plantas virtuais
+├── js/mech/kit.js         utilitários da Mecânica (formulários, seções, banco de materiais)
+├── js/mech/materiais.js   Materiais e Projetos
+├── js/mech/termofluidos.js Fluidos e Sistemas Térmicos
+├── js/mech/fabricacao.js  Fabricação, Controle e Gestão Industrial
 ├── js/ctrl/math.js     polinômios, raízes (Aberth), parser de G(s), frações parciais, espaço de estados, respostas
 ├── js/ctrl/extract.js  esquemático → G(s)
 ├── js/ctrl/chart.js    gráfico genérico (log, zoom, leitura)
@@ -138,4 +157,5 @@ O solver confere com as soluções analíticas:
 - esquemático → G(s): massa-mola dá 1/(s² + 2s + 100), RC dá 1000/(s + 1000) e o circuito da analogia elétrica dá s/(s² + 2s + 100);
 - K/(s(s+2)(s+4)): Routh e lugar das raízes dão K crítico = 48 e ω = 2,83 rad/s; com K = 10, Bode dá MG = 13,6 dB = 20·log(48/10) e MF = 47°;
 - Nyquist de (s+2)/((s−1)(s+3)) com K = 4: P = 1, N = −1, Z = 0 (estável), conferido pelas raízes;
+- Mecânica: viga biapoiada com P central dá Mmáx = PL/4 e flecha = PL³/48EI; engastada com carga distribuída dá flecha = wL⁴/8EI; fator de atrito confere com Blasius e com o regime totalmente rugoso; ajustes ISO conferem com a tabela (H7/g6 Ø25: −7/−20 µm; H7/p6: +22/+35 µm);
 - Mason confere com a redução de blocos, inclusive com laços que não se tocam (Δ = 1 − (L1+L2) + L1·L2).

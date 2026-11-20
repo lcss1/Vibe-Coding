@@ -387,7 +387,7 @@ MS.App = class {
     $('#doc-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
 
     document.querySelectorAll('#tabs [data-tab]').forEach(b => b.addEventListener('click', () => this.setTab(b.dataset.tab)));
-    document.querySelectorAll('#subtabs [data-sub]').forEach(b => b.addEventListener('click', () => this.setSub(b.dataset.sub)));
+    document.querySelectorAll('.subtabs [data-sub]').forEach(b => b.addEventListener('click', () => this.setSub(b.dataset.sub)));
     $('#btn-plotinfo').onclick = () => this.modal('Visualizador de formas de onda', el('div', { class: 'help', html: MS.PLOT_HELP }));
 
     // reprodução 3D
@@ -452,20 +452,24 @@ MS.App = class {
     this.tab = id;
     document.body.dataset.tab = id;
     document.querySelectorAll('#tabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
-    const hints = { sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', ctrl: 'Modelagem, estabilidade, frequência e CLP', mec: 'Ferramentas de engenharia mecânica (em construção)', ele: 'Ferramentas de engenharia elétrica (em construção)' };
+    const hints = { sim: 'Esquemático multidomínio com simulação no tempo e bancada 3D', ctrl: 'Modelagem, estabilidade, frequência e CLP', mec: 'Materiais e projetos · fluidos e sistemas térmicos · fabricação e gestão', ele: 'Ferramentas de engenharia elétrica (em construção)' };
     $('#tabs-hint').textContent = hints[id] || '';
     if (id === 'sim') requestAnimationFrame(() => this.layout());
-    if (id === 'ctrl') this.setSub(this.sub || 'model');
+    const nav = document.querySelector(`#tab-${id} .subtabs`);
+    if (nav) this.setSub((this.subs || {})[id] || nav.querySelector('[data-sub]').dataset.sub);
     try { localStorage.setItem('mecontroleng.tab', id); } catch (e) { /* */ }
   }
-  /* sub-abas de Controle e Automação */
+  /* sub-abas (Controle e Automação, Mecânica…) */
   setSub(id) {
-    this.sub = id;
-    $('#tab-ctrl').dataset.sub = id;
-    document.querySelectorAll('#subtabs [data-sub]').forEach(b => b.classList.toggle('on', b.dataset.sub === id));
-    if (!document.querySelector('#tab-' + id + ' .subnav')) MS.CS.renderTab(id);
+    const view = document.getElementById('tab-' + id); if (!view) return;
+    const main = view.closest('.tabview');
+    const mainId = main.id.slice(4);
+    this.subs = this.subs || {}; this.subs[mainId] = id;
+    main.querySelectorAll('.subtabs [data-sub]').forEach(b => b.classList.toggle('on', b.dataset.sub === id));
+    main.querySelectorAll('.subview').forEach(v => v.classList.toggle('on', v === view));
+    if (!view.querySelector('.subnav')) MS.CS.renderTab(id);
     else if (id === 'model' && MS.CS.current.model === 'sch') MS.CS.renderTab(id);
-    try { localStorage.setItem('mecontroleng.sub', id); } catch (e) { /* */ }
+    try { localStorage.setItem('mecontroleng.subs', JSON.stringify(this.subs)); } catch (e) { /* */ }
   }
 
   /* ───── modais ───── */
@@ -529,7 +533,8 @@ MS.HELP_HTML = `
 <table>
 <tr><td><b>⚡ Simulação</b></td><td>esquemático, simulação no tempo, gráficos e bancada 3D (aba principal)</td></tr>
 <tr><td><b>◎ Controle e Automação</b></td><td><b>Modelagem matemática</b> (G(s), Laplace, blocos ↔ fluxo de sinal, espaço de estados, G(s) do esquemático) · <b>Estabilidade</b> (Routh-Hurwitz, lugar das raízes) · <b>Frequência</b> (resposta em frequência, Bode, Nyquist) · <b>CLP</b> (Ladder com simulação e plantas virtuais)</td></tr>
-<tr><td><b>⚙ Mecânica</b> · <b>⌁ Elétrica</b></td><td>reservadas para as próximas ferramentas</td></tr>
+<tr><td><b>⚙ Mecânica</b></td><td><b>Materiais e Projetos</b> (resistência dos materiais, vibrações, elementos de máquinas, seleção de materiais) · <b>Fluidos e Sistemas Térmicos</b> (termodinâmica, mecânica dos fluidos, transferência de calor) · <b>Fabricação, Controle e Gestão Industrial</b> (usinagem, metrologia, manutenção)</td></tr>
+<tr><td><b>⌁ Elétrica</b></td><td>reservada para as próximas ferramentas</td></tr>
 </table>
 <p>O botão <b>📘 Entenda</b> abre a teoria resumida de cada ferramenta, e <b>📘 Sobre o componente</b> (nas propriedades) explica cada peça do esquemático.</p>
 <h3>Analogia usada (força-corrente / mobilidade)</h3>
@@ -577,6 +582,6 @@ MS.PLOT_HELP = `
 
 window.addEventListener('DOMContentLoaded', () => {
   window.app = new MS.App();
-  let t = 'sim'; try { t = localStorage.getItem('mecontroleng.tab') || 'sim'; window.app.sub = localStorage.getItem('mecontroleng.sub') || 'model'; } catch (e) { /* */ }
+  let t = 'sim'; try { t = localStorage.getItem('mecontroleng.tab') || 'sim'; window.app.subs = JSON.parse(localStorage.getItem('mecontroleng.subs') || '{}'); } catch (e) { /* */ }
   window.app.setTab(t);
 });

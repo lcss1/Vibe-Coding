@@ -141,8 +141,8 @@
   </aside>
 </main>
 
-<section class="tabview" id="tab-ctrl" data-sub="model">
-  <nav id="subtabs">
+<section class="tabview has-sub" id="tab-ctrl">
+  <nav class="subtabs">
     <button data-sub="model" class="on">ƒ Modelagem matemática</button>
     <button data-sub="stab">⚖ Estabilidade</button>
     <button data-sub="freq">∿ Frequência</button>
@@ -153,10 +153,15 @@
   <div class="subview" id="tab-freq"></div>
   <div class="subview" id="tab-plc"></div>
 </section>
-<section class="tabview placeholder" id="tab-mec">
-  <div class="ph-card"><div class="ph-icon">⚙</div><h2>Mecânica</h2>
-    <p>Espaço reservado para as ferramentas de engenharia mecânica. As sub-abas serão definidas nas próximas etapas.</p>
-    <p class="muted small">Enquanto isso, os componentes mecânicos (massas, molas, engrenagens, cilindros…) estão na aba <b>Simulação</b>.</p></div>
+<section class="tabview has-sub" id="tab-mec">
+  <nav class="subtabs">
+    <button data-sub="mat" class="on">◫ Materiais e Projetos</button>
+    <button data-sub="fts">♨ Fluidos e Sistemas Térmicos</button>
+    <button data-sub="fab">⚒ Fabricação, Controle e Gestão Industrial</button>
+  </nav>
+  <div class="subview" id="tab-mat"></div>
+  <div class="subview" id="tab-fts"></div>
+  <div class="subview" id="tab-fab"></div>
 </section>
 <section class="tabview placeholder" id="tab-ele">
   <div class="ph-card"><div class="ph-icon">⌁</div><h2>Elétrica</h2>
@@ -192,6 +197,10 @@
 <script src="js/ctrl/tab-stab.js"></script>
 <script src="js/ctrl/tab-freq.js"></script>
 <script src="js/ctrl/plc.js"></script>
+<script src="js/mech/kit.js"></script>
+<script src="js/mech/materiais.js"></script>
+<script src="js/mech/termofluidos.js"></script>
+<script src="js/mech/fabricacao.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

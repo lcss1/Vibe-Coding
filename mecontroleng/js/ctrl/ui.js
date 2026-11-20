@@ -120,7 +120,8 @@
   CS.registerTab = (id, def) => { CS.TABS[id] = def; };
   CS.current = {};
   CS.openTool = (tabId, toolId) => {
-    MS.app.setTab('ctrl'); MS.app.setSub(tabId);
+    const mv = document.getElementById('tab-' + tabId).closest('.tabview');
+    MS.app.setTab(mv.id.slice(4)); MS.app.setSub(tabId);
     CS.renderTab(tabId, toolId);
   };
   CS.renderTab = (tabId, toolId) => {

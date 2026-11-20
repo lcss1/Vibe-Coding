@@ -35,18 +35,20 @@ MS.Chart = class {
   }
   fx(x) { return this.o.xlog ? Math.log10(Math.max(x, 1e-300)) : x; }
   ifx(u) { return this.o.xlog ? Math.pow(10, u) : u; }
+  fy(y) { return this.o.ylog ? Math.log10(Math.max(y, 1e-300)) : y; }
+  ify(u) { return this.o.ylog ? Math.pow(10, u) : u; }
   autoRange() {
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    const acc = (x, y) => { if (!isFinite(x) || !isFinite(y)) return; const u = this.fx(x); x0 = Math.min(x0, u); x1 = Math.max(x1, u); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
+    const acc = (x, y) => { if (!isFinite(x) || !isFinite(y) || (this.o.ylog && y <= 0) || (this.o.xlog && x <= 0)) return; const u = this.fx(x), w = this.fy(y); x0 = Math.min(x0, u); x1 = Math.max(x1, u); y0 = Math.min(y0, w); y1 = Math.max(y1, w); };
     for (const s of this.data.series) if (!s.noFit) for (let i = 0; i < s.x.length; i++) acc(s.x[i], s.y[i]);
     for (const m of this.data.markers) if (!m.noFit) acc(m.x, m.y);
     if (this.o.xrange) { x0 = this.fx(this.o.xrange[0]); x1 = this.fx(this.o.xrange[1]); }
-    if (this.o.yrange) { y0 = this.o.yrange[0]; y1 = this.o.yrange[1]; }
+    if (this.o.yrange) { y0 = this.fy(this.o.yrange[0]); y1 = this.fy(this.o.yrange[1]); }
     if (this.o.includeOrigin) { x0 = Math.min(x0, 0); x1 = Math.max(x1, 0); y0 = Math.min(y0, 0); y1 = Math.max(y1, 0); }
     if (!isFinite(x0)) { x0 = this.o.xlog ? -1 : -1; x1 = 1; y0 = -1; y1 = 1; }
     if (x1 - x0 < 1e-12) { x0 -= 1; x1 += 1; }
     if (y1 - y0 < 1e-12 * Math.max(1, Math.abs(y1))) { const d = Math.abs(y1) * 0.1 || 1; y0 -= d; y1 += d; }
-    const px = (x1 - x0) * (this.o.xlog ? 0 : this.o.pad), py = (y1 - y0) * this.o.pad;
+    const px = (x1 - x0) * (this.o.xlog ? 0 : this.o.pad), py = (y1 - y0) * (this.o.ylog ? 0.02 : this.o.pad);
     let v = { x0: x0 - px, x1: x1 + px, y0: y0 - py, y1: y1 + py };
     if (this.o.equal) v = this.fixAspect(v);
     return v;
@@ -60,9 +62,9 @@ MS.Chart = class {
   }
   get ML() { return 56; } get MR() { return 12; } get MT() { return 10; } get MB() { return 30; }
   X(x) { const v = this.view; return this.ML + (this.fx(x) - v.x0) / (v.x1 - v.x0) * (this.W - this.ML - this.MR); }
-  Y(y) { const v = this.view; return this.MT + (v.y1 - y) / (v.y1 - v.y0) * (this.H - this.MT - this.MB); }
+  Y(y) { const v = this.view; return this.MT + (v.y1 - this.fy(y)) / (v.y1 - v.y0) * (this.H - this.MT - this.MB); }
   invX(px) { const v = this.view; return this.ifx(v.x0 + (px - this.ML) / (this.W - this.ML - this.MR) * (v.x1 - v.x0)); }
-  invY(py) { const v = this.view; return v.y1 - (py - this.MT) / (this.H - this.MT - this.MB) * (v.y1 - v.y0); }
+  invY(py) { const v = this.view; return this.ify(v.y1 - (py - this.MT) / (this.H - this.MT - this.MB) * (v.y1 - v.y0)); }
 
   _bind() {
     const cv = this.cv;
@@ -89,7 +91,7 @@ MS.Chart = class {
       e.preventDefault();
       const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
       const f = Math.exp(e.deltaY * 0.0015), v = this.view;
-      const ux = this.fx(this.invX(px)), uy = this.invY(py);
+      const ux = this.fx(this.invX(px)), uy = this.fy(this.invY(py));
       const zy = !e.shiftKey || this.o.equal, zx = !e.altKey || this.o.equal;
       this.view = {
         x0: zx ? ux - (ux - v.x0) * f : v.x0, x1: zx ? ux + (v.x1 - ux) * f : v.x1,
@@ -118,12 +120,13 @@ MS.Chart = class {
     // grade
     g.lineWidth = 1; g.font = '10px "Share Tech Mono", monospace';
     const xt = this.o.xlog ? logTicks(v.x0, v.x1) : MS.niceTicks(v.x0, v.x1, Math.max(2, Math.floor(PW / 80))).map(t => ({ u: t, major: true }));
-    const yt = MS.niceTicks(v.y0, v.y1, Math.max(2, Math.floor(PH / 40)));
+    const yt = this.o.ylog ? logTicks(v.y0, v.y1).filter(t => t.major).map(t => this.ify(t.u)) : MS.niceTicks(v.y0, v.y1, Math.max(2, Math.floor(PH / 40)));
     for (const t of xt) { const x = Math.round(L + (t.u - v.x0) / (v.x1 - v.x0) * PW) + 0.5; g.strokeStyle = t.major ? col('--plot-grid') : col('--plot-grid2'); g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + PH); g.stroke(); }
+    if (this.o.ylog) for (const t of logTicks(v.y0, v.y1)) if (!t.major) { const y = Math.round(this.Y(this.ify(t.u))) + 0.5; g.strokeStyle = col('--plot-grid2'); g.beginPath(); g.moveTo(L, y); g.lineTo(L + PW, y); g.stroke(); }
     for (const t of yt) { const y = Math.round(this.Y(t)) + 0.5; g.strokeStyle = col('--plot-grid'); g.beginPath(); g.moveTo(L, y); g.lineTo(L + PW, y); g.stroke(); }
     // eixos x=0 / y=0
     g.strokeStyle = col('--plot-zero');
-    if (v.y0 < 0 && v.y1 > 0) { const y = Math.round(this.Y(0)) + 0.5; g.beginPath(); g.moveTo(L, y); g.lineTo(L + PW, y); g.stroke(); }
+    if (!this.o.ylog && v.y0 < 0 && v.y1 > 0) { const y = Math.round(this.Y(0)) + 0.5; g.beginPath(); g.moveTo(L, y); g.lineTo(L + PW, y); g.stroke(); }
     if (!this.o.xlog && v.x0 < 0 && v.x1 > 0) { const x = Math.round(this.X(0)) + 0.5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + PH); g.stroke(); }
     for (const h of this.data.hlines) { g.strokeStyle = h.color; g.setLineDash(h.dash || [5, 4]); g.beginPath(); g.moveTo(L, this.Y(h.y)); g.lineTo(L + PW, this.Y(h.y)); g.stroke(); g.setLineDash([]); if (h.label) { g.fillStyle = h.color; g.textAlign = 'right'; g.fillText(h.label, L + PW - 4, this.Y(h.y) - 4); } }
     for (const h of this.data.vlines) { g.strokeStyle = h.color; g.setLineDash(h.dash || [5, 4]); g.beginPath(); g.moveTo(this.X(h.x), T); g.lineTo(this.X(h.x), T + PH); g.stroke(); g.setLineDash([]); if (h.label) { g.fillStyle = h.color; g.textAlign = 'left'; g.fillText(h.label, this.X(h.x) + 4, T + 12); } }
@@ -160,7 +163,7 @@ MS.Chart = class {
     let lastX = -1e9;
     for (const t of xt) if (t.major) { const x = L + (t.u - v.x0) / (v.x1 - v.x0) * PW; if (x - lastX < 34) continue; lastX = x; g.fillText(this.o.xlog ? fmtLog(t.u) : MS.CS.fmtNum(t.u, 3), x, T + PH + 4); }
     g.textAlign = 'right'; g.textBaseline = 'middle';
-    for (const t of yt) g.fillText(MS.CS.fmtNum(t, 3), L - 5, this.Y(t));
+    for (const t of yt) g.fillText(this.o.ylog ? fmtLog(Math.log10(t)) : MS.CS.fmtNum(t, 3), L - 5, this.Y(t));
     g.textBaseline = 'alphabetic';
     if (this.o.xlabel) { g.textAlign = 'right'; g.fillStyle = col('--txt3'); g.font = '11px Barlow, sans-serif'; g.fillText(this.o.xlabel, L + PW - 2, T + PH - 4); }
     if (this.o.ylabel) { g.save(); g.translate(12, T + PH / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillStyle = col('--txt2'); g.font = '11px Barlow, sans-serif'; g.fillText(this.o.ylabel, 0, 0); g.restore(); }

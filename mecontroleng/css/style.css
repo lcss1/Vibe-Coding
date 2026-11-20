@@ -187,14 +187,14 @@ body.no3d #v3d-pane, body.no3d #split-v { display: none; }
 .tabview { display: none; flex: 1; min-height: 0; }
 body:not([data-tab="sim"]) #app { display: none; }
 body:not([data-tab="sim"]) .sim-only { display: none !important; }
-body[data-tab="ctrl"] #tab-ctrl { display: flex; flex-direction: column; }
-body[data-tab="mec"] #tab-mec, body[data-tab="ele"] #tab-ele { display: flex; }
-#subtabs { flex: 0 0 auto; display: flex; gap: 4px; padding: 6px 12px 0; background: var(--bg0); border-bottom: 1px solid var(--border); }
-#subtabs button { background: var(--bg1); border: 1px solid var(--border); border-bottom: none; border-radius: 5px 5px 0 0; padding: 5px 14px; cursor: pointer; color: var(--txt2); font-size: 12.5px; }
-#subtabs button:hover { color: var(--wht); }
-#subtabs button.on { background: var(--panel); color: var(--acc); border-color: var(--border2); }
+body[data-tab="ctrl"] #tab-ctrl, body[data-tab="mec"] #tab-mec { display: flex; flex-direction: column; }
+body[data-tab="ele"] #tab-ele { display: flex; }
+.subtabs { flex: 0 0 auto; display: flex; gap: 4px; padding: 6px 12px 0; background: var(--bg0); border-bottom: 1px solid var(--border); }
+.subtabs button { background: var(--bg1); border: 1px solid var(--border); border-bottom: none; border-radius: 5px 5px 0 0; padding: 5px 14px; cursor: pointer; color: var(--txt2); font-size: 12.5px; }
+.subtabs button:hover { color: var(--wht); }
+.subtabs button.on { background: var(--panel); color: var(--acc); border-color: var(--border2); }
 .subview { display: none; flex: 1; min-height: 0; }
-#tab-ctrl[data-sub="model"] #tab-model, #tab-ctrl[data-sub="stab"] #tab-stab, #tab-ctrl[data-sub="freq"] #tab-freq, #tab-ctrl[data-sub="plc"] #tab-plc { display: flex; }
+.subview.on { display: flex; }
 .placeholder { align-items: center; justify-content: center; }
 .ph-card { max-width: 460px; text-align: center; padding: 30px; border: 1px dashed var(--border2); border-radius: 10px; background: var(--panel); }
 .ph-card h2 { color: var(--wht); margin: 6px 0 10px; font-weight: 600; }
@@ -355,3 +355,36 @@ details.about p { font-size: 12px; line-height: 1.5; margin-top: 5px; color: var
 .bitv.on { color: var(--grn); font-weight: bold; }
 .det { font-family: 'Share Tech Mono', monospace; font-size: 11.5px; color: var(--txt2); }
 @media (max-width: 1250px) { .grid-plc { grid-template-columns: 1fr; } }
+
+/* ───── Mecânica ───── */
+.sec-seg { margin-bottom: 12px; }
+.sec-seg button { padding: 6px 14px; font-size: 12.5px; }
+.sec-area { display: flex; flex-direction: column; gap: 12px; }
+.mform { display: grid; grid-template-columns: 1fr; gap: 6px 14px; }
+.mform.c2 { grid-template-columns: 1fr 1fr; }
+.mf { display: flex; flex-direction: column; gap: 2px; }
+.mf > span { font-size: 11.5px; color: var(--txt2); }
+.mf em { font-style: normal; color: var(--txt3); font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+.mf input, .mf select { width: 100%; font-family: 'Share Tech Mono', monospace; }
+.mf-sep { grid-column: 1 / -1; font-family: 'Share Tech Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--org); margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px; }
+.chart-box.sm { height: 210px; }
+.chart-box.xl { height: 560px; }
+.mk-canvas { position: relative; width: 100%; }
+.mk-canvas canvas { display: block; }
+.load-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; font-size: 12px; color: var(--txt2); }
+.load-row input.sm, .load-row .sm { width: 70px; }
+.load-row input:not(.sm) { flex: 1; min-width: 120px; }
+.hbar { position: relative; height: 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; overflow: visible; }
+.hbar-fill { height: 100%; border-radius: 2px; transition: width 0.2s; }
+.hbar-mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #fff; opacity: 0.7; }
+.oee-row { display: grid; grid-template-columns: 110px 1fr 70px; gap: 10px; align-items: center; margin-bottom: 4px; }
+.oee-name { font-weight: 600; color: var(--txt); }
+.oee-val { font-family: 'Share Tech Mono', monospace; text-align: right; }
+.oee-note { grid-column: 2 / 4; margin: -2px 0 8px; }
+.mat-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 11.5px; color: var(--txt2); }
+.mat-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+.rank td .bar { height: 10px; border-radius: 2px; }
+.dbt td.num { text-align: right; font-family: 'Share Tech Mono', monospace; }
+.dbt th.sortable { cursor: pointer; text-align: right; }
+.dbt th.sortable.on { color: var(--acc); }
+.paq-msg { font-size: 13px; line-height: 1.6; color: var(--txt); min-height: 22px; }
